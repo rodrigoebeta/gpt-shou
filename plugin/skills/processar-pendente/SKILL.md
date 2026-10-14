@@ -34,6 +34,14 @@ Se a análise falhar, grave o conteúdo disponível e continue no próximo item.
 Use no máximo duas tentativas para uma falha transitória do item.
 Suspenda a modalidade afetada após uma falha repetida de infraestrutura.
 Não substitua uma transcrição válida por null durante uma tentativa malsucedida.
+Considere a ausência confirmada de fala um resultado válido.
+Use texto vazio e absent em transcription e transcription_pt somente após comprovar essa ausência.
+Aceite a evidência no_audio_stream do auxiliar quando o hash corresponder ao vídeo adquirido.
+Quando houver áudio, use uma ferramenta cloud para escutar todo o conteúdo antes de confirmar que não há fala.
+Preserve palavras cantadas inteligíveis. Música não comprova ausência de voz.
+Uma saída vazia do transcritor não comprova ausência de fala. Preserve null e unavailable sem essa confirmação.
+Use complete e failure=null quando os demais campos obrigatórios estiverem disponíveis.
+Não crie ANALYSIS_FAILED nem repita um resultado completo somente por não haver fala confirmada.
 Pare antes do próximo item se a gravação ou a limpeza permanecer incerta.
 Respeite as rejeições de aprovação e os cancelamentos. Não procure outra rota para executar uma ação rejeitada.
 

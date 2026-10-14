@@ -2,7 +2,7 @@
   "package_version": "0.1.0",
   "contract_version": "1.0.0",
   "content_version": "1.2.0",
-  "acquisition_runtime_version": "1.7.1",
+  "acquisition_runtime_version": "1.7.2",
   "release_status": "validation_pending",
   "cloud_media_verified": false,
   "scheduled_execution_verified": false,

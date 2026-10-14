@@ -26,4 +26,4 @@ execFileSync('tar',['--no-same-owner','-xzf',archive,'-C',native],{cwd:root,env,
 const library = join(native,'libcurl-impersonate.so');
 await readFile(library);
 await writeFile(join(root,'native-path.txt'),library+'\n',{mode:0o600});
-console.log(JSON.stringify({ok:true,runtime_version:'1.7.1',execution:'cloud',native_sha256:expected}));
+console.log(JSON.stringify({ok:true,runtime_version:'1.7.2',execution:'cloud',native_sha256:expected}));

@@ -171,8 +171,11 @@ def media_metadata(info):
     duration = float(info["format"]["duration"])
     if not math.isfinite(duration) or not 0 < duration <= 600:
         raise ValueError("Unsupported media duration")
-    if not any(stream.get("codec_type") == "audio" for stream in info["streams"]):
-        raise ValueError("No audio stream")
+    streams = info["streams"]
+    if not isinstance(streams, list) or not streams or any(not isinstance(stream, dict) or not isinstance(stream.get("codec_type"), str) for stream in streams):
+        raise ValueError("Invalid stream metadata")
+    if not any(stream["codec_type"] in {"audio", "video"} for stream in streams):
+        raise ValueError("No audio or video stream")
     return duration
 
 
@@ -263,6 +266,17 @@ def main():
     path = Path(sys.argv[1]).resolve()
     if not path.is_file() or path.stat().st_size > 100_000_000:
         raise SystemExit("Use an acquired cloud media file of at most 100 MB.")
+    details = stage("asr_ffprobe", lambda: json.loads(run(["ffprobe", "-v", "error", "-show_entries", "format=duration:stream=codec_type", "-of", "json", str(path)], 20).stdout))
+    duration = stage("asr_metadata", lambda: media_metadata(details))
+
+    def media_digest():
+        with path.open("rb") as source:
+            return hashlib.file_digest(source, "sha256").hexdigest()
+
+    if not any(stream["codec_type"] == "audio" for stream in details["streams"]):
+        digest = stage("asr_media_hash", media_digest)
+        print(json.dumps({"ok": True, "probe_version": "1.2.0", "execution": "work-cloud", "media_sha256": digest, "verified_container_duration_seconds": duration, "transcription": "", "availability": "absent", "language": None, "language_probability": None, "duration_seconds": duration, "speech_detected": False, "absence_evidence": "no_audio_stream"}), flush=True)
+        return
     if not python.is_file() or not all((model / name).is_file() and (model / name).stat().st_size for name in MODEL_FILES):
         raise SystemExit("Run --prepare first.")
     # Reuse the isolated Python interpreter; do not use unrelated global packages.
@@ -271,8 +285,6 @@ def main():
         value = child_transcription_output(result.stdout)
         print(json.dumps(value, ensure_ascii=False), flush=True)
         return
-    details = stage("asr_ffprobe", lambda: json.loads(run(["ffprobe", "-v", "error", "-show_entries", "format=duration:stream=codec_type", "-of", "json", str(path)], 20).stdout))
-    duration = stage("asr_metadata", lambda: media_metadata(details))
 
     def engine_imports():
         if importlib.metadata.version("faster-whisper") != VERSION:
@@ -287,10 +299,6 @@ def main():
     audio = np.frombuffer(pcm, dtype="<i2").astype(np.float32) / 32768.0
     segments, info = stage("asr_transcribe", lambda: engine.transcribe(audio, task="transcribe", beam_size=5, vad_filter=True, condition_on_previous_text=False))
     result = stage("asr_segments", lambda: speech_result(segments, info))
-
-    def media_digest():
-        with path.open("rb") as source:
-            return hashlib.file_digest(source, "sha256").hexdigest()
 
     digest = stage("asr_media_hash", media_digest)
     print(json.dumps({"ok": True, "probe_version": "1.1.0", "execution": "work-cloud", "model": MODEL, "model_revision": REVISION, "faster_whisper_version": VERSION, "audio_decoder": "ffmpeg", "audio_sample_rate": 16000, "decoded_audio_samples": len(pcm) // 2, "media_sha256": digest, "verified_container_duration_seconds": duration, **result}, ensure_ascii=False), flush=True)

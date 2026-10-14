@@ -767,7 +767,7 @@
           },
           "runtime_version": {
             "type": "string",
-            "const": "1.7.1"
+            "const": "1.7.2"
           },
           "manifest": {
             "type": "object",
@@ -782,7 +782,7 @@
             "properties": {
               "runtime_version": {
                 "type": "string",
-                "const": "1.7.1"
+                "const": "1.7.2"
               },
               "execution": {
                 "type": "string",

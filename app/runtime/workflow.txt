@@ -1,4 +1,4 @@
-ShouBox cloud runtime 1.7.1
+ShouBox cloud runtime 1.7.2
 
 Run media acquisition and analysis only in ChatGPT Work cloud execution.
 Use this installation's native ShouBox tools and the owner's cloud Instagram session.
@@ -6,6 +6,10 @@ Do not use a local browser, computer, attachment, paid model API, or another ins
 
 Acquire a run lease with start_run before processing.
 Use started_at from the lease response as the exact run start time.
+Process the existing eligible pending queue before any new-save check, collection scan, or discovery write.
+Finish every pending page before starting discovery. Do not wait for future retries or repeat attempts from this run.
+Keep baseline_only identities excluded. A baseline-only installation can start discovery when its eligible pending queue is empty.
+After each discovery page, process its eligible pending work before discovering another page.
 Process every eligible pending page. A page boundary or a few successful items is not a completion condition.
 Keep the current pending page and next_pending_cursor while processing its items.
 Use start_run mode=renew with that cursor after finishing the page.
@@ -32,7 +36,8 @@ Use individual get_runtime files only if archive delivery is unavailable; preser
 Run node bootstrap.mjs in that cloud directory.
 This installs only the pinned technical acquisition dependencies inside the directory.
 It performs no transcription or visual analysis.
-Run python transcribe.py --prepare in the same cloud directory.
+Prepare speech dependencies only when an acquired file contains an audio stream.
+Run python transcribe.py --prepare in the same cloud directory once audio transcription is required.
 The helper disables ONNX telemetry before importing ONNX Runtime, including its initialization event.
 Keep ORT_DISABLE_TELEMETRY=1 and the existing telemetry opt-outs enabled.
 Attempt preparation at most twice for a transient failure.
@@ -80,7 +85,7 @@ Use set_import_scope only for an explicit owner choice during setup or a later s
 For all_saved, scan All posts and mapped collections. For collections, scan only the selected mapped collections.
 Treat each list separately. Read its checkpoint with get_discovery before scanning it.
 Use collection_id=null for All posts. A checkpoint is a browser anchor, not an Instagram API cursor.
-At each run, check the first visible page for new saves through register_sources before continuing older discovery.
+After processing the existing eligible pending queue, check the first visible page for new saves through register_sources before continuing older discovery.
 Do not advance the older checkpoint during this head check. Do not assume the displayed order is chronological.
 Resume an incomplete list by locating anchor_source_key in the rendered list and continuing after that card.
 Register confirmed Reels encountered while locating the anchor. Never skip an unknown Reel merely because it precedes the anchor.
@@ -104,7 +109,7 @@ Preserve complete content and manual edits when registration adds another collec
 The page checkpoint and discovered identities commit together. They survive missing finish_run calls and expired leases.
 Keep the legacy cursor from start_run unchanged in finish_run. Durable discovery uses get_discovery, not that legacy cursor.
 After baseline.status=ready, import unseen sources and keep baseline_only sources excluded.
-Process new saves before the initial backlog.
+Process the existing eligible pending queue before collecting new saves.
 Register discovered identities through register_sources before acquiring media.
 Skip removed references. Read stored content before skipping an already complete reference.
 Add missing Portuguese text and semantic descriptions from verified stored sources without repeating acquisition or media analysis.
@@ -129,11 +134,20 @@ Stop Instagram requests on RATE_LIMITED and respect retry_at with increasing bac
 Run python transcribe.py <video_path> with the acquired MP4 path.
 Use the final successful JSON object after the stage records.
 Require its media_sha256 to match the acquired video's SHA256 before saving the transcription.
-Preserve its transcription text and availability exactly.
+Preserve observed transcription text. Treat unavailable recognition as unresolved until a separate audio inspection establishes the speech state.
 The helper uses FFmpeg and faster-whisper inside Work cloud execution.
 It disables optional ONNX Runtime telemetry before importing the speech engine.
 It accepts files of at most 100 MB and videos of at most 600 seconds.
 An empty recognition result remains null and unavailable; it does not prove that speech is absent.
+For a verified video without an audio stream, the helper returns empty text and absent without loading the speech engine.
+Use absence_evidence=no_audio_stream and the matching media hash as evidence for that result.
+For music, effects, or silence with an audio stream, inspect the complete audio through an available cloud media tool.
+If that inspection confirms no speech, save transcription and transcription_pt as empty strings with availability=absent for both fields.
+Do not classify intelligible lyrics as absent speech. Preserve intelligible sung words in the transcript.
+An empty ASR result, silent excerpt, caption, or visual inspection alone cannot establish absence across the complete audio.
+Keep null and unavailable when complete audio inspection is unavailable or inconclusive.
+Verified absent speech is valid. Use outcome=complete and failure=null when every other required field is available.
+Do not assign ANALYSIS_FAILED or retry a complete reference merely because verified speech is absent.
 If transcription fails, preserve valid stored content and report its safe stage diagnostics.
 Do not print credentials, signed URLs, raw exception messages, or private process output.
 Use the cloud model's media tools to inspect video frames and describe visible content.

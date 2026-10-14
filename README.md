@@ -38,6 +38,9 @@ O player carrega a próxima página quando necessário e preserva os filtros e a
 Escolha todos os Salvos ou coleções específicas durante a configuração.
 O ChatGPT associa as coleções do Instagram à biblioteca e guarda o progresso de cada lista.
 Após uma interrupção, o ChatGPT retoma a descoberta e evita referências duplicadas.
+Cada execução processa primeiro os itens pendentes elegíveis. Depois, busca novos favoritos.
+Conteúdos sem fala confirmada podem ficar completos, com os campos de transcrição vazios.
+Uma falha de transcrição mantém o conteúdo parcial até uma nova verificação.
 Uma mudança de escopo preserva as referências já guardadas.
 Escolha importar o acervo existente ou somente novos favoritos.
 No modo somente novos, o ChatGPT conclui primeiro o levantamento do escopo escolhido, sem importar os Reels encontrados.

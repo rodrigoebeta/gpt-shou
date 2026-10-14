@@ -6,11 +6,16 @@ description: Captura os Reels salvos do Instagram para o ShouBox, um por vez, co
 # Capturar favoritos
 
 Execute somente no Work na nuvem e na instalação escolhida pela pessoa.
-Leia get_runtime com file=workflow.txt. Exija runtime 1.7.0 ou uma versão compatível posterior.
+Leia get_runtime com file=workflow.txt. Exija runtime 1.7.2 ou uma versão compatível posterior.
 Confirme o acesso aos Salvos no navegador da nuvem.
 Adquira start_run com mode=acquire e pending_cursor=null.
 Use trigger=scheduled somente quando o host identificar uma ocorrência agendada.
 Use trigger=manual para uma mensagem da pessoa ou um teste manual.
+
+Use [processar-pendente](../processar-pendente/SKILL.md) primeiro, com a lease atual.
+Percorra toda a fila elegível existente antes de verificar novos Salvos, percorrer coleções ou registrar descobertas.
+Não espere itens com retry_at futuro nem repita tentativas desta execução.
+Ignore identidades baseline_only. Inicie o levantamento quando não houver pendentes elegíveis.
 
 Continue até concluir as listas selecionadas e tentar todos os itens elegíveis.
 Não transforme uma página, um lote ou alguns itens bem-sucedidos em uma condição de conclusão.
@@ -20,7 +25,7 @@ Informe progresso breve durante a execução, sem encerrar a captura para aprese
 Use sync_collections, get_discovery e record_discovery_page para a descoberta.
 Confirme cada página e sua âncora no Site antes de obter a mídia.
 Faça a verificação dos novos Salvos sem perder a âncora das listas antigas.
-Alterne páginas de descoberta e páginas de processamento para avançar nas duas filas.
+Depois de cada página descoberta, processe os novos pendentes elegíveis antes de descobrir outra página.
 Conclua todas as listas iniciais quando baseline.status=collecting. Ignore as identidades baseline_only.
 Marque end_reached somente quando o navegador comprovar o fim real da lista.
 

@@ -2,7 +2,7 @@
 
 ## Versões e capacidades
 
-Use aplicativo 0.1.0, contrato 1.0.0, conteúdo 1.2.0 e runtime cloud 1.7.1.
+Use aplicativo 0.1.0, contrato 1.0.0, conteúdo 1.2.0 e runtime cloud 1.7.2.
 Leia VERSION.json e verifique FILES.sha256 antes de executar o pacote.
 Esta versão exige validação completa na conta de destino antes da ativação automática.
 Não apresente como validada uma capacidade comprovada somente em outra conta ou em uma execução local.
@@ -79,10 +79,14 @@ Verifique o hash do materializador e do arquivo comprimido; o materializador ver
 Realize essa preparação offline, sem curl para o Site ou geração de dependências.
 Preserve package-lock.json e use npm ci somente durante o bootstrap.
 Leia workflow.txt antes de preparar dependências de mídia.
+Processe toda a fila pendente elegível antes de verificar novos Salvos, percorrer coleções ou registrar descobertas.
+Respeite retry_at futuro e ignore identidades baseline_only. Não repita tentativas desta execução.
+Depois de cada página descoberta, processe seus novos pendentes elegíveis antes de descobrir outra página.
 Execute o bootstrap somente quando houver mídia para processar. O levantamento de somente novos não precisa dele.
 O auxiliar instala suas dependências no diretório temporário e obtém mídia e legenda.
 O auxiliar atual obtém posts acessíveis anonimamente; login do navegador não autentica automaticamente o auxiliar.
 Se um post exigir acesso não disponível, preserve a pendência e informe a limitação.
+Prepare o transcritor somente quando o vídeo adquirido tiver uma faixa de áudio.
 Execute python transcribe.py --prepare no diretório cloud para preparar o transcritor e o modelo de versão fixa.
 Execute python transcribe.py <video_path> com o MP4 adquirido.
 Compare media_sha256 com o hash da aquisição antes de gravar a transcrição.
@@ -131,7 +135,12 @@ Preserve transcription no idioma original.
 Use o modelo Work para traduzir integralmente a fala estrangeira para português do Brasil.
 Grave a tradução em transcription_pt com disponibilidade translated.
 Se toda a fala já estiver em português, copie o original e use original.
-Para fala ausente verificada, use texto vazio e absent. Para texto indisponível, use null e unavailable.
+Para fala ausente verificada, use texto vazio e absent nos dois campos de transcrição.
+Aceite no_audio_stream do auxiliar somente quando o hash corresponder ao vídeo adquirido.
+Com uma faixa de áudio, confirme a ausência de fala pela escuta completa em uma ferramenta cloud.
+Preserve palavras cantadas inteligíveis. Uma saída vazia do transcritor não comprova ausência de fala.
+Use complete e failure=null quando os demais campos obrigatórios estiverem disponíveis. Não crie uma falha apenas pela ausência confirmada de fala.
+Para texto indisponível, use null e unavailable.
 Mantenha o novo resultado parcial se faltar o texto em português.
 Complete traduções pendentes a partir de transcrições já verificadas, preservando os demais dados.
 Use o próprio modelo Work para gerar semantic_description em português do Brasil.
@@ -192,7 +201,7 @@ Consulte a documentação oficial: https://learn.chatgpt.com/docs/automations.
 
 Mantenha aplicativo, runtime, contrato, onboarding e prompt compatíveis.
 Repita a verificação do catálogo após cada mudança nas ferramentas MCP.
-Atualize os prompts existentes para runtime 1.7.1 e conteúdo 1.2.0 antes de novas gravações.
+Atualize os prompts existentes para runtime 1.7.2 e conteúdo 1.2.0 antes de novas gravações.
 O Site mantém a leitura de conteúdo 1.0.0 e 1.1.0, mas exige 1.2.0 nas novas gravações de content.
 Uma alteração do template não atualiza uma tarefa já instalada.
 Leia a configuração da tarefa existente e atualize seu prompt dentro do escopo autorizado pela pessoa.

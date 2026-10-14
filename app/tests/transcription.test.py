@@ -5,6 +5,7 @@ import io
 import json
 from pathlib import Path
 import subprocess
+import tempfile
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
@@ -181,8 +182,31 @@ class ProbeTests(unittest.TestCase):
         for value in ["nan", "inf", "0", "601"]:
             with self.assertRaises(ValueError):
                 probe.media_metadata({**valid, "format": {"duration": value}})
-        with self.assertRaises(ValueError):
-            probe.media_metadata({**valid, "streams": [{"codec_type": "video"}]})
+        self.assertEqual(probe.media_metadata({**valid, "streams": [{"codec_type": "video"}]}), 15.206)
+        for streams in [None, [], [{}], [None], [{"codec_type": "subtitle"}]]:
+            with self.assertRaises(ValueError):
+                probe.media_metadata({**valid, "streams": streams})
+
+    def test_verified_video_without_audio_needs_no_speech_engine(self):
+        # Synthetic bytes and mocked ffprobe; this test does not analyze media.
+        cache = Path(__file__).resolve().parents[1] / ".cache"
+        cache.mkdir(exist_ok=True)
+        with tempfile.TemporaryDirectory(dir=cache) as directory:
+            root = Path(directory)
+            video = root / "synthetic.mp4"
+            video.write_bytes(b"synthetic fixture")
+            details = {"format": {"duration": "12"}, "streams": [{"codec_type": "video"}]}
+            with patch.object(probe, "__file__", str(root / "transcribe.py")), patch.object(probe.sys, "argv", ["transcribe.py", str(video)]), patch.object(probe.platform, "system", return_value="Linux"), patch.object(probe.platform, "machine", return_value="x86_64"), patch.dict(probe.os.environ), patch.object(probe.subprocess, "run", return_value=SimpleNamespace(stdout=json.dumps(details))) as run, patch.object(probe, "speech_engine") as engine, contextlib.redirect_stdout(io.StringIO()) as output:
+                probe.main()
+            result = json.loads(output.getvalue().splitlines()[-1])
+            self.assertEqual(result["availability"], "absent")
+            self.assertEqual(result["transcription"], "")
+            self.assertEqual(result["absence_evidence"], "no_audio_stream")
+            self.assertEqual(result["media_sha256"], probe.hashlib.sha256(video.read_bytes()).hexdigest())
+            self.assertEqual(result["duration_seconds"], 12)
+            engine.assert_not_called()
+            run.assert_called_once()
+            self.assertEqual(run.call_args.args[0][0], "ffprobe")
 
     def test_empty_output_does_not_claim_absent_speech(self):
         info = SimpleNamespace(language="en", language_probability=0.9, duration=15.206)
