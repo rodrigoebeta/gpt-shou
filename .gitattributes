@@ -1,0 +1,2 @@
+# Preserve the exact bytes checked by FILES.sha256.
+* -text

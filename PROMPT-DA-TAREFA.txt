@@ -1,0 +1,40 @@
+Atualize meu ShouBox em {{SITE_URL}} com meus Reels salvos do Instagram.
+Execute o fluxo novamente em cada ocorrência. Não apresente um relatório anterior como resultado atual.
+Execute somente na nuvem e use exclusivamente as ferramentas desta instalação.
+Use o navegador da nuvem com a sessão do Instagram preparada durante a instalação.
+Confirme o acesso aos meus Salvos no início da execução.
+Se o login expirar, preserve as pendências e peça que eu repita AUTENTICAR-INSTAGRAM.txt em uma conversa Work na nuvem.
+Não peça credenciais no chat nem use a sessão do meu computador.
+Obtenha o manifesto e as instruções atuais com get_runtime pelo plugin do ShouBox.
+Antes de start_run, confirme sync_collections, get_discovery e record_discovery_page no conector.
+Se uma ferramenta faltar, pare e informe os nomes ausentes. Não improvise outro meio de gravação.
+Use runtime 1.5.0, contrato 1.0.0 e pacote 0.1.0 com as configurações retornadas por start_run.
+Leia workflow.txt. Prepare o transcritor na execução Work na nuvem somente quando houver mídia para processar.
+Se baseline.status=collecting, conclua as listas pendentes antes de importar fontes desconhecidas.
+Exclua os Reels encontrados nesse levantamento, inclusive os salvos durante ele. Registre suas identidades sem processar mídia.
+Use register_sources para as verificações iniciais e a busca da âncora. Use record_discovery_page para avançar cada página.
+Ignore itens baseline_only. Confirme baseline.status=ready por releitura antes de importar identidades desconhecidas.
+Preserve a escolha initial_import. Não use set_import_mode durante a execução agendada.
+Respeite minhas coleções, categorias, tópicos, referências removidas e edições manuais.
+Confirme cada Reel e normalize seu link para https://www.instagram.com/reel/<shortcode>/ antes de register_sources.
+Use somente IDs de coleção registrados no ShouBox e associados à origem observada. Não envie IDs do Instagram nesses campos.
+Associe os IDs observados do Instagram com sync_collections, conforme workflow.txt.
+Leia get_discovery para cada lista e registre cada página com record_discovery_page antes de obter mídia.
+Retome pela última âncora confirmada. Releia cartões quando necessário e preserve referências existentes.
+Confirme o fim real da lista antes de marcar end_reached. Uma interrupção não comprova o fim.
+Use set_import_scope somente quando eu pedir uma mudança de escopo.
+Obtenha a legenda e a mídia, transcreva a fala e descreva visualmente o vídeo para a busca por palavras-chave.
+Preserve a fala original e acrescente sua tradução integral para português do Brasil quando houver outro idioma.
+Use content_version=1.2.0 e transcription_pt, conforme workflow.txt. Inclua os dois textos na busca e na classificação.
+Gere semantic_description pelo próprio modelo Work a partir da legenda, da fala e da inspeção visual verificadas.
+Descreva assunto, contexto, finalidade e conceitos em duas a quatro frases em português, sem inventar fatos.
+Use disponibilidade generated e inclua o texto na busca; se faltar suporte, use null/unavailable e mantenha o resultado parcial.
+Enriqueça referências antigas com tradução e descrição pendentes a partir das fontes salvas, sem repetir a análise da mídia.
+Grave a referência com sua capa original e sua classificação no meu Site.
+Confirme a gravação antes de informar sucesso.
+Informe o run_id, o trigger enviado, os horários UTC de início e fim e o resultado de finish_run desta ocorrência.
+Se parar antes de start_run, informe run_id=null e o impedimento.
+Preserve o progresso e retome as pendências após interrupções ou limites do serviço.
+Mantenha incompletos os resultados que não puder verificar.
+Informe quando eu precisar renovar o acesso ou resolver um impedimento.
+Não use arquivos do meu computador, anexos da tarefa, APIs pagas de modelos ou cópias permanentes dos vídeos.

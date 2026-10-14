@@ -1,0 +1,3 @@
+# Preserve the runtime bytes used by the signed delivery manifest.
+/runtime/* -text
+/scripts/materialize-runtime.py -text

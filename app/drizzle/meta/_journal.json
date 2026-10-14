@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1791862927911,
+      "tag": "0000_glamorous_typhoid_mary",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1791923638638,
+      "tag": "0001_gifted_champions",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1791931159305,
+      "tag": "0002_naive_sentinels",
+      "breakpoints": true
+    }
+  ]
+}

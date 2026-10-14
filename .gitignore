@@ -1,0 +1,31 @@
+# Dependencies, tools and local state
+node_modules/
+.tools/
+.cache/
+.private/
+.runtime/
+.venv/
+__pycache__/
+*.log
+.env
+.env.*
+!.env.example
+
+# Recipient-specific data and continuity
+HANDOFF.json
+task_plan.md
+findings.md
+progress.md
+.planning/
+*.sqlite
+*.sqlite-*
+*.mp4
+*.m4a
+*.wav
+
+# Instance configuration
+**/.openai/hosting.json
+!/app/.openai/hosting.json
+
+Thumbs.db
+.DS_Store

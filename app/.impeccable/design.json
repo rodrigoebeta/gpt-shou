@@ -1,0 +1,159 @@
+{
+  "schemaVersion": 2,
+  "title": "Design System: ShouBox",
+  "extensions": {
+    "shadows": [
+      {
+        "name": "search",
+        "value": "0 4px 13px #263b5206",
+        "purpose": "Lift the search capsule."
+      },
+      {
+        "name": "cover",
+        "value": "0 3px 10px #263b5209",
+        "purpose": "Lift portrait covers."
+      },
+      {
+        "name": "picker",
+        "value": "0 16px 45px #263b5226",
+        "purpose": "Separate the desktop picker from the library."
+      },
+      {
+        "name": "sheet",
+        "value": "0 -9px 30px #263b521c",
+        "purpose": "Separate the mobile sheet from the library."
+      },
+      {
+        "name": "panel",
+        "value": "0 20px 65px #13294129",
+        "purpose": "Lift modal panels."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease",
+        "value": "cubic-bezier(.16,1,.3,1)",
+        "purpose": "Use for cover, grid, picker, and sheet movement."
+      },
+      {
+        "name": "cover-hover",
+        "value": "transform .38s cubic-bezier(.16,1,.3,1)",
+        "purpose": "Scale imagery to 1.035 on hover."
+      },
+      {
+        "name": "grid-enter",
+        "value": ".28s",
+        "purpose": "Enter with a 5px vertical movement."
+      },
+      {
+        "name": "picker-enter",
+        "value": ".16s",
+        "purpose": "Enter the desktop picker."
+      },
+      {
+        "name": "sheet-enter",
+        "value": ".24s",
+        "purpose": "Enter the sheet with an 18px vertical movement."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "four-columns",
+        "value": "1180px"
+      },
+      {
+        "name": "three-columns",
+        "value": "930px"
+      },
+      {
+        "name": "mobile-sheet-two-columns",
+        "value": "650px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Action",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Use for reset and completion actions.",
+      "html": "<button class=\"ds-primary\">Limpar filtros</button>",
+      "css": ".ds-primary{font:12px Manrope,system-ui,sans-serif;background:var(--primary,#365b80);color:#fff;border:0;border-radius:999px;padding:11px 20px;min-height:43px;cursor:pointer}.ds-primary:hover{background:#2c4f73}.ds-primary:focus-visible{outline:3px solid var(--ring,#557ca7);outline-offset:4px}"
+    },
+    {
+      "name": "Selected Filter",
+      "kind": "button",
+      "refersTo": "filter-selected",
+      "description": "Show the selected count on a filter pill.",
+      "html": "<button class=\"ds-filter\">Criador <span>2</span><svg width=\"13\" height=\"13\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><path d=\"m6 9 6 6 6-6\"/></svg></button>",
+      "css": ".ds-filter{display:flex;align-items:center;gap:9px;font:12px Manrope,system-ui,sans-serif;background:#edf3fa;color:var(--primary,#365b80);border:1px solid #a6bbd3;border-radius:999px;padding:6px 11px;min-height:42px;cursor:pointer}.ds-filter span{display:grid;place-items:center;min-width:19px;height:19px;border-radius:50%;background:var(--primary,#365b80);color:#fff;font-size:10px;padding:0 4px}.ds-filter:hover{background:#f5f8fc;border-color:#c7d4e4}.ds-filter:focus-visible{outline:3px solid var(--ring,#557ca7);outline-offset:4px}"
+    },
+    {
+      "name": "Search Field",
+      "kind": "input",
+      "description": "Use a capsule with a visible focus outline.",
+      "html": "<label class=\"ds-search\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><circle cx=\"11\" cy=\"11\" r=\"8\"/><path d=\"m21 21-4.3-4.3\"/></svg><input aria-label=\"Encontrar uma referência\" placeholder=\"Uma ideia, um assunto, um criador…\"/></label>",
+      "css": ".ds-search{display:flex;align-items:center;gap:11px;max-width:550px;min-height:50px;padding:5px 16px;background:#fafbfd;border:1px solid #e5ebf3;border-radius:999px;box-shadow:0 4px 13px #263b5206;color:var(--muted-foreground,#607088)}.ds-search input{font:12px Manrope,system-ui,sans-serif;min-width:0;flex:1;height:34px;border:0;padding:0;background:transparent;color:#334e70;outline:none}.ds-search input::placeholder{color:var(--muted-foreground,#607088);opacity:1}.ds-search:focus-within{outline:2px solid var(--ring,#557ca7);outline-offset:3px}@media(max-width:650px){.ds-search input{font-size:16px}}"
+    },
+    {
+      "name": "Library Navigation",
+      "kind": "nav",
+      "description": "Keep active and inactive destinations readable.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Navegação principal\"><button aria-pressed=\"true\">Biblioteca</button><button aria-pressed=\"false\">Removidos</button></nav>",
+      "css": ".ds-nav{display:flex;gap:4px;align-items:center;background:var(--muted,#f5f7fa);border:1px solid #e8edf3;border-radius:999px;padding:5px;width:max-content}.ds-nav button{font:650 12px Manrope,system-ui,sans-serif;min-height:38px;border:0;border-radius:999px;padding:8px 13px;cursor:pointer;background:transparent;color:var(--muted-foreground,#607088);opacity:1}.ds-nav [aria-pressed=true]{background:#fff;color:var(--primary,#365b80);box-shadow:0 2px 7px #263b520b}.ds-nav button:hover{background:var(--accent,#eaf0f8)}.ds-nav button:focus-visible{outline:3px solid var(--ring,#557ca7);outline-offset:4px}"
+    },
+    {
+      "name": "Category Chip",
+      "kind": "chip",
+      "refersTo": "category-chip",
+      "description": "Use cool category accents with common lightness and chroma.",
+      "html": "<span class=\"ds-category\">Categoria</span>",
+      "css": ".ds-category{display:inline-flex;font:650 11px Manrope,system-ui,sans-serif;background:oklch(96% .012 250);color:oklch(49% .065 250);border:0;border-radius:999px;padding:3px 7px}"
+    },
+    {
+      "name": "Portrait Cover",
+      "kind": "card",
+      "refersTo": "cover",
+      "description": "Keep every cover in the same portrait frame. This example shows the missing-cover state.",
+      "html": "<div class=\"ds-cover\"><svg width=\"32\" height=\"32\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" aria-hidden=\"true\"><path d=\"M19 21l-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z\"/></svg><span>Sem capa</span></div>",
+      "css": ".ds-cover{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;width:180px;aspect-ratio:9/16;border-radius:18px;overflow:hidden;background:var(--secondary,#edf2f8);color:#768da8;box-shadow:0 3px 10px #263b5209;font:12px Manrope,system-ui,sans-serif}@media(max-width:650px){.ds-cover{border-radius:15px}}"
+    }
+  ],
+  "narrative": {
+    "northStar": "A calm visual library",
+    "overview": "ShouBox uses white space, cool capsules, slate-blue actions, and equal portrait covers. Manrope and the bookmark icon identify the product. The interface uses functional labels in Brazilian Portuguese.",
+    "keyCharacteristics": [
+      "Floating control groups.",
+      "Restrained cool classification accents.",
+      "Equal portrait covers in an aligned grid.",
+      "Searchable multi-select filters.",
+      "Proportional sans-serif typography."
+    ],
+    "rules": [
+      {
+        "name": "The Equal Accent Rule",
+        "body": "Keep classification lightness and chroma constant; vary only hue.",
+        "section": "colors"
+      },
+      {
+        "name": "The Equal Cover Rule",
+        "body": "Use one 9:16 frame for every cover, with object-fit cover and aligned grid rows.",
+        "section": "layout"
+      }
+    ],
+    "dos": [
+      "Do retain the ShouBox name, Manrope, and bookmark icon.",
+      "Do use equal 9:16 covers and aligned grid rows.",
+      "Do keep classification accents at common lightness and chroma.",
+      "Do retain selections during search, pagination, and request failures.",
+      "Do keep result-area heights stable across picker states.",
+      "Do use functional labels and visible keyboard focus.",
+      "Do respect reduced-motion preferences."
+    ],
+    "donts": [
+      "Don't use beige interface surfaces or masonry.",
+      "Don't add explanatory or marketing copy to the interface.",
+      "Don't expose internal transcript, description, or analysis text in cards."
+    ]
+  }
+}

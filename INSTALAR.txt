@@ -1,0 +1,12 @@
+Instale o ShouBox deste pacote na minha própria infraestrutura do ChatGPT Sites.
+Leia INSTRUCOES-DO-AGENTE.md e confira a versão e a integridade dos arquivos.
+Mantenha a instalação e os dados privados para minha conta.
+Realize a preparação técnica e o provisionamento por mim.
+Guie-me nas autorizações, no login do Instagram e nas preferências necessárias.
+Prepare o login em uma conversa Work na nuvem antes de configurar a tarefa agendada.
+Use AUTENTICAR-INSTAGRAM.txt e confirme o acesso aos meus Salvos nessa preparação.
+Use meu ChatGPT na nuvem para obter os Reels salvos, transcrever a fala, descrever o vídeo e categorizar as referências.
+Armazene os textos no backend para a busca por palavras-chave.
+Mostre as referências, as capas e a reprodução original no meu ShouBox.
+Valide o fluxo completo antes de ativar a tarefa agendada.
+Informe qualquer etapa ainda indisponível nesta versão.
