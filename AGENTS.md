@@ -1,4 +1,4 @@
-# ShouBox — instruções para instalação e uso
+# shōu — instruções para instalação e uso
 
 - Este repositório prepara uma instalação independente no Sites para cada pessoa. Referências e análises serão armazenadas no próprio Site, sem Notion obrigatório.
 - Este pacote contém as fontes e as instruções para validação. Verificar as capacidades cloud, o fluxo agendado e a instalação independente antes de ativar a automação.

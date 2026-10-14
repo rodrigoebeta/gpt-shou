@@ -1,8 +1,8 @@
-# Instalação e verificação do ShouBox
+# Instalação e verificação do shōu
 
 ## Versões e capacidades
 
-Use aplicativo 0.1.0, contrato 1.0.0, conteúdo 1.2.0 e runtime cloud 1.7.4.
+Use aplicativo 0.1.0, contrato 1.0.0, conteúdo 1.2.0 e runtime cloud 1.7.5.
 Leia VERSION.json e verifique FILES.sha256 antes de executar o pacote.
 Esta versão exige validação completa na conta de destino antes da ativação automática.
 Não apresente como validada uma capacidade comprovada somente em outra conta ou em uma execução local.
@@ -22,6 +22,8 @@ Se o repositório não estiver acessível, informe o impedimento. Não solicite 
 Use o fluxo oficial do Sites e as fontes em app/ como template da instalação.
 Leia app/.openai/hosting.json antes de criar o Site. O template não contém uma identidade de instalação.
 Crie um único Site privado na conta da pessoa e persista seu project_id retornado.
+Use shōu como título do Site. Atualize também o título nas instalações existentes pelo fluxo oficial do Sites.
+Preserve o endereço de uma instalação existente, salvo quando a pessoa solicitar sua mudança.
 Configure D1 com o binding DB, R2 com BUCKET e a capacidade mcp.
 Configure OWNER_EMAIL no ambiente server-only do Site com o e-mail verificado da pessoa.
 Mantenha credenciais, configurações da instância e arquivos de mídia fora das fontes publicadas.
@@ -37,7 +39,7 @@ Confirme as ferramentas anunciadas, além da versão retornada por get_runtime.
 Confirme sync_collections, set_import_scope, get_discovery e record_discovery_page antes de validar coleções.
 Confirme set_import_mode antes de configurar a importação inicial.
 Se um plugin conectado anunciar ferramentas antigas, publique novamente a versão compatível no Sites.
-Use Settings → Plugins → ShouBox → Refresh tools se o catálogo continuar antigo.
+Use Settings → Plugins → shōu → Refresh tools se o catálogo continuar antigo.
 Inicie uma nova execução Work e confira novamente as ferramentas.
 Se elas continuarem ausentes, pare antes de start_run e registre os nomes ausentes.
 Não recrie o Site nem o plugin para atualizar o catálogo.
@@ -100,7 +102,7 @@ Confirme que cada publicação é um Reel antes de normalizar seu link para http
 Preserve o link observado no relatório de validação. Um link /p/ sozinho não comprova que a publicação é um Reel.
 Use o shortcode observado como source_key, sem inventar datas ou ordem cronológica dos favoritos.
 Associe coleções somente quando a origem estiver comprovada na lista consultada.
-Use somente collection_ids registrados na taxonomia do ShouBox. Os identificadores do Instagram não são intercambiáveis com eles.
+Use somente collection_ids registrados na taxonomia do shōu. Os identificadores do Instagram não são intercambiáveis com eles.
 Pare a importação por coleções quando a correspondência com a taxonomia estiver ausente ou ambígua.
 Leia os IDs numéricos das coleções no navegador e chame sync_collections em lotes de até 50.
 Use expected_taxonomy_revision atual e collection_id=null para uma nova associação.
@@ -181,7 +183,7 @@ Remova o diretório temporário inteiro ao terminar, incluindo mídia, modelo, a
 Teste a abertura do vídeo pelo clique no centro da capa.
 Teste as setas anterior e próxima, mantendo a busca e a ordem escolhidas.
 Teste o gesto vertical na faixa lateral do player em um dispositivo touch, quando disponível.
-Não use o gesto dentro do embed como teste de navegação do ShouBox.
+Não use o gesto dentro do embed como teste de navegação do shōu.
 Registre separadamente a validação em dispositivo físico e a simulação de eventos.
 
 Valide um Reel real, sua reprodução no Site, a classificação e a recuperação pela busca.
@@ -196,7 +198,7 @@ Use o intervalo ou os horários e o fuso escolhidos pela pessoa.
 Confirme o identificador e a configuração retornados pelo agendador. Não crie tarefas duplicadas.
 Use o teste manual para validar o método. Não exija uma ocorrência pelo horário como etapa adicional de aprovação.
 Confira run_id, trigger=manual, horários e finish_run no relatório do teste manual.
-Compare os reference_ids desse relatório com a leitura atual do ShouBox.
+Compare os reference_ids desse relatório com a leitura atual do shōu.
 Registre separadamente a captura manual validada e a tarefa salva. Não declare um disparo automático observado sem evidência.
 Consulte a documentação oficial: https://learn.chatgpt.com/docs/automations.
 
@@ -204,7 +206,7 @@ Consulte a documentação oficial: https://learn.chatgpt.com/docs/automations.
 
 Mantenha aplicativo, runtime, contrato, onboarding e prompt compatíveis.
 Repita a verificação do catálogo após cada mudança nas ferramentas MCP.
-Atualize os prompts existentes para runtime 1.7.4 e conteúdo 1.2.0 antes de novas gravações.
+Atualize os prompts existentes para runtime 1.7.5 e conteúdo 1.2.0 antes de novas gravações.
 O Site mantém a leitura de conteúdo 1.0.0 e 1.1.0, mas exige 1.2.0 nas novas gravações de content.
 Uma alteração do template não atualiza uma tarefa já instalada.
 Leia a configuração da tarefa existente e atualize seu prompt dentro do escopo autorizado pela pessoa.

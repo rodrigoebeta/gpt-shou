@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "title": "Design System: ShouBox",
+  "title": "Design System: shōu",
   "extensions": {
     "shadows": [
       {
@@ -121,7 +121,7 @@
   ],
   "narrative": {
     "northStar": "A calm visual library",
-    "overview": "ShouBox uses white space, cool capsules, slate-blue actions, and equal portrait covers. Manrope and the bookmark icon identify the product. The interface uses functional labels in Brazilian Portuguese.",
+    "overview": "shōu uses white space, cool capsules, slate-blue actions, and equal portrait covers. Manrope and the bookmark icon identify the product. The interface uses functional labels in Brazilian Portuguese.",
     "keyCharacteristics": [
       "Floating control groups.",
       "Restrained cool classification accents.",
@@ -142,7 +142,7 @@
       }
     ],
     "dos": [
-      "Do retain the ShouBox name, Manrope, and bookmark icon.",
+      "Do retain the shōu name, Manrope, and bookmark icon.",
       "Do use equal 9:16 covers and aligned grid rows.",
       "Do keep classification accents at common lightness and chroma.",
       "Do retain selections during search, pagination, and request failures.",

@@ -1,4 +1,4 @@
-# Skills do ShouBox
+# Skills do shōu
 
 Este diretório contém instalar, autenticar, capturar-favoritos, agendar e processar-pendente.
 As skills complementam o plugin que o Sites cria para cada instalação.
@@ -23,7 +23,7 @@ Não distribua o ZIP de uma instalação para outra pessoa.
 Não inclua current-source.json, o ZIP privado ou os IDs de uma instalação no repositório público.
 Cada instalação recebe suas próprias conexões pelo Sites.
 
-Use runtime 1.7.4 ou uma versão compatível posterior.
+Use runtime 1.7.5 ou uma versão compatível posterior.
 Atualize as tarefas já existentes com PROMPT-DA-TAREFA.txt; a publicação das skills não altera os prompts antigos.
 Valide o método de captura com uma execução manual.
 Deixe cada pessoa escolher o intervalo e o fuso. Confirme a tarefa salva quando ela solicitar o agendamento.

@@ -1,8 +1,8 @@
-# ShouBox
+# shōu
 
 ## Cloud runtime
 
-The authenticated get_runtime tool supplies cloud runtime 1.7.4 and its workflow through the Site's native plugin.
+The authenticated get_runtime tool supplies cloud runtime 1.7.5 and its workflow through the Site's native plugin.
 The manifest includes a compressed archive and an offline Python materializer with independent SHA256 checks.
 Materialize the exact six files before the bootstrap. Never regenerate package-lock.json or fetch source from the private Site through the shell.
 The cloud task retrieves and verifies its source files on each run. It requires no task attachment or local files.
@@ -35,7 +35,7 @@ Keep the shared model and dependencies during the run. Remove the whole temporar
 
 Run node scripts/build-runtime.mjs after editing runtime files. The build rejects a stale runtime bundle.
 
-ShouBox stores Reel references in native Sites D1 and original covers in R2.
+shōu stores Reel references in native Sites D1 and original covers in R2.
 The interface shows the Reel, creator, source link, classifications, and processing status.
 The transcript, description, and analysis remain in the backend.
 This version uses keyword search. It uses no paid model API.

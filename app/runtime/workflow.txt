@@ -1,9 +1,9 @@
-ShouBox cloud runtime 1.7.4
+shōu cloud runtime 1.7.5
 
 Start the task through Work in the ChatGPT mobile app.
 Use the ChatGPT mobile app for Instagram authentication.
 Run media acquisition and analysis only in the remote Work execution environment.
-Use this installation's native ShouBox tools and the owner's cloud Instagram session.
+Use this installation's native shōu tools and the owner's cloud Instagram session.
 Do not use a local browser, computer, attachment, paid model API, or another installation's credentials.
 
 Acquire a run lease with start_run before processing.
@@ -132,7 +132,7 @@ Add missing Portuguese text and semantic descriptions from verified stored sourc
 Preserve its original transcript, visual inspection, cover, and manual classifications.
 Skip complete references only when Portuguese text and a generated semantic description are present, unless requested reclassification applies.
 Obtain a source URL from discovery or pending work, not a fixed demonstration Reel.
-Use the collection IDs supplied by ShouBox and preserve manual classification edits.
+Use the collection IDs supplied by shōu and preserve manual classification edits.
 If login or browser access is unavailable, defer discovery and report the required user action.
 Continue stored-content enrichment and otherwise permitted processing of known URLs.
 Do not export browser credentials into tool results or logs.

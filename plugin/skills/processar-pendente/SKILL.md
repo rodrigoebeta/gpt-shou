@@ -1,6 +1,6 @@
 ---
 name: processar-pendente
-description: Processa a fila pendente do ShouBox por páginas, preserva a posição após interrupções e remove os artefatos de cada item.
+description: Processa a fila pendente do shōu por páginas, preserva a posição após interrupções e remove os artefatos de cada item.
 ---
 
 # Processar pendentes

@@ -34,14 +34,14 @@ export function UpdateNotice({ enabled }: { enabled: boolean }) {
     return () => { clearInterval(timer); document.removeEventListener("visibilitychange", check); controller?.abort(); };
   }, [enabled]);
   if (!enabled || update?.status !== "available" || !update.latest) return null;
-  const prompt = `Atualize meu ShouBox em ${window.location.origin} para a versão ${update.latest.version} ou uma versão estável posterior. Use a skill instalar e o pacote oficial https://github.com/rodrigoebeta/gpt-shoubox. Confira a versão e os hashes na mesma revisão. Preserve este Site, seus dados, acesso, configurações, plugin e agendamentos. Verifique se há uma captura ativa antes de publicar. Atualize as skills e os prompts das tarefas existentes sem mudar seus horários. Não inicie captura nem login do Instagram para esta atualização. Confirme as versões publicadas e informe qualquer etapa pendente.`;
+  const prompt = `Atualize meu shōu em ${window.location.origin} para a versão ${update.latest.version} ou uma versão estável posterior. Use a skill instalar e o pacote oficial https://github.com/rodrigoebeta/gpt-shou. Confira a versão e os hashes na mesma revisão. Preserve este Site, seus dados, acesso, configurações, plugin e agendamentos. Verifique se há uma captura ativa antes de publicar. Atualize as skills e os prompts das tarefas existentes sem mudar seus horários. Não inicie captura nem login do Instagram para esta atualização. Confirme as versões publicadas e informe qualquer etapa pendente.`;
   const copy = async () => {
     try { await navigator.clipboard.writeText(prompt); setCopied(true); setCopyError(false); }
     catch { setCopyError(true); promptField.current?.focus(); promptField.current?.select(); }
   };
-  return <aside className="update-notice" aria-label="Atualização do ShouBox">
+  return <aside className="update-notice" aria-label="Atualização do shōu">
     <div className="update-notice-heading">
-      <div><strong>Uma nova versão do ShouBox está disponível</strong><p>Versão {update.latest.version} · Você usa a {update.installed_version}</p></div>
+      <div><strong>Uma nova versão do shōu está disponível</strong><p>Versão {update.latest.version} · Você usa a {update.installed_version}</p></div>
       <Button variant="outline" aria-expanded={open} aria-controls={instructionsId} onClick={() => setOpen(!open)}>{open ? "Fechar detalhes" : "Ver atualização"}<ArrowUpRight size={15} aria-hidden="true"/></Button>
     </div>
     {open && <div id={instructionsId} className="update-instructions">

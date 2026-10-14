@@ -1,6 +1,6 @@
 ---
 name: agendar
-description: Agenda a captura de favoritos do ShouBox em uma tarefa Work pelo aplicativo do ChatGPT no seu celular, no intervalo e fuso escolhidos pela pessoa.
+description: Agenda a captura de favoritos do shōu em uma tarefa Work pelo aplicativo do ChatGPT no seu celular, no intervalo e fuso escolhidos pela pessoa.
 ---
 
 # Agendar a captura

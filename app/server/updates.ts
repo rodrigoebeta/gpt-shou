@@ -1,7 +1,7 @@
 import installed from "./release.json";
 import { readBody } from "./validation";
 
-const RELEASE_URL = "https://raw.githubusercontent.com/rodrigoebeta/gpt-shoubox/main/app/server/release.json";
+const RELEASE_URL = "https://raw.githubusercontent.com/rodrigoebeta/gpt-shou/main/app/server/release.json";
 const CACHE_MS = 15 * 60 * 1000;
 type Release = typeof installed;
 let cached: { release: Release | null; expires: number } | undefined;

@@ -1,6 +1,6 @@
-# ShouBox
+# shōu
 
-O ShouBox organiza seus Reels salvos em uma biblioteca particular, com busca por palavras e categorias.
+O shōu organiza seus Reels salvos em uma biblioteca particular, com busca por palavras e categorias.
 Seu próprio ChatGPT instala o aplicativo na sua infraestrutura e mantém a biblioteca atualizada na nuvem.
 Cada pessoa usa seu próprio Site, seus dados e suas conexões. O produto não exige Notion.
 
@@ -9,7 +9,7 @@ Cada pessoa usa seu próprio Site, seus dados e suas conexões. O produto não e
 Abra uma conversa Work pelo aplicativo do ChatGPT no seu celular e envie este comando:
 
 ```text
-Instale meu ShouBox a partir de https://github.com/rodrigoebeta/gpt-shoubox.
+Instale meu shōu a partir de https://github.com/rodrigoebeta/gpt-shou.
 Use a versão da branch main e siga INSTALAR.txt e INSTRUCOES-DO-AGENTE.md.
 Faça o provisionamento na minha conta e mantenha meu Site e meus dados privados.
 Conduza comigo a configuração e o teste manual, do início ao fim.
@@ -61,7 +61,7 @@ Se uma capacidade necessária estiver indisponível, o agente informa o impedime
 
 ## Skills incluídas
 
-- instalar: instala ou atualiza seu ShouBox privado.
+- instalar: instala ou atualiza seu shōu privado.
 - autenticar: guia o acesso ao Instagram no navegador da nuvem.
 - capturar-favoritos: descobre e importa os Reels salvos, um por vez.
 - agendar: configura a tarefa na nuvem no intervalo escolhido.
@@ -74,11 +74,14 @@ Cancelamentos e limites da plataforma continuam possíveis. A tarefa agendada re
 
 ## Atualizar
 
-O ShouBox avisa na biblioteca quando uma nova versão fica disponível no GitHub.
+O shōu avisa na biblioteca quando uma nova versão fica disponível no GitHub.
 Selecione **Ver atualização** e copie o pedido. Envie-o no Work pelo aplicativo do ChatGPT no seu celular.
 O ChatGPT atualiza o Site e as skills, preservando seus dados e suas configurações.
 O aviso aparece após a verificação periódica; não é uma notificação do celular.
 Instalações anteriores à versão 1.7.3 precisam receber esta atualização uma vez para habilitar os avisos.
-Para essa primeira atualização, envie: "Atualize meu ShouBox pelo pacote oficial https://github.com/rodrigoebeta/gpt-shoubox. Preserve meu Site e meus dados."
+Para essa primeira atualização, envie: "Atualize meu shōu pelo pacote oficial https://github.com/rodrigoebeta/gpt-shou. Preserve meu Site e meus dados."
 
 A versão 1.7.4 preenche criadores ausentes após obter metadados verificados. O fluxo normal lê links em uma aba de Salvos e processa as URLs por código.
+
+A versão 1.7.5 atualiza a marca para **shōu**. O repositório oficial agora é https://github.com/rodrigoebeta/gpt-shou.
+As instalações existentes mantêm seus dados e suas configurações.

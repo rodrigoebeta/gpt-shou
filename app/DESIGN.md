@@ -1,5 +1,5 @@
 ---
-name: ShouBox
+name: shōu
 description: A calm visual library with searchable filters and equal portrait covers.
 colors:
   primary: "#365b80"
@@ -102,13 +102,13 @@ components:
     width: "310px"
 ---
 
-# Design System: ShouBox
+# Design System: shōu
 
 ## Overview
 
 **Creative North Star: "A calm visual library"**
 
-ShouBox uses white space, cool capsules, slate-blue actions, and equal portrait covers.
+shōu uses white space, cool capsules, slate-blue actions, and equal portrait covers.
 Manrope and the bookmark icon identify the product. The interface uses functional labels in Brazilian Portuguese.
 
 This document describes the current app source in `app/library.tsx`, `app/globals.css`, and `app/interface.css`.
@@ -239,7 +239,7 @@ Notifications provide a visible close action. Their text describes the completed
 
 ## Do's and Don'ts
 
-- Do retain the ShouBox name, Manrope, and bookmark icon.
+- Do retain the shōu name, Manrope, and bookmark icon.
 - Do use equal 9:16 covers and aligned grid rows.
 - Do keep classification accents at common lightness and chroma.
 - Do retain selections during search, pagination, and request failures.

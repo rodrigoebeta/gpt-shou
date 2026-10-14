@@ -1,12 +1,12 @@
 ---
 name: capturar-favoritos
-description: Captura os Reels salvos do Instagram para o ShouBox, um por vez, com descoberta persistente e retomada da fila.
+description: Captura os Reels salvos do Instagram para o shōu, um por vez, com descoberta persistente e retomada da fila.
 ---
 
 # Capturar favoritos
 
 Execute somente no Work pelo aplicativo do ChatGPT no seu celular e na instalação escolhida pela pessoa.
-Leia get_runtime com file=workflow.txt. Exija runtime 1.7.4 ou uma versão compatível posterior.
+Leia get_runtime com file=workflow.txt. Exija runtime 1.7.5 ou uma versão compatível posterior.
 Adquira start_run com mode=acquire e pending_cursor=null.
 Use trigger=scheduled somente quando o host identificar uma ocorrência agendada.
 Use trigger=manual para uma mensagem da pessoa ou um teste manual.
