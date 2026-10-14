@@ -2,7 +2,7 @@
 
 ## Cloud runtime
 
-The authenticated get_runtime tool supplies cloud runtime 1.5.0 and its workflow through the Site's native plugin.
+The authenticated get_runtime tool supplies cloud runtime 1.6.0 and its workflow through the Site's native plugin.
 The manifest includes a compressed archive and an offline Python materializer with independent SHA256 checks.
 Materialize the exact six files before the bootstrap. Never regenerate package-lock.json or fetch source from the private Site through the shell.
 The cloud task retrieves and verifies its source files on each run. It requires no task attachment or local files.
@@ -24,7 +24,14 @@ Verify acquisition, transcription, visual inspection, and scheduled execution in
 The runtime requires Linux x86_64, Python with venv, FFmpeg, ffprobe, and access to its package and model sources.
 The transcription helper accepts at most 100 MB and 600 seconds. Empty recognition output remains unavailable.
 Compare the transcription media digest with the acquisition digest before saving content.
-Remove the temporary workspace, including its model, virtual environment, and caches, after the run.
+Keep one browser tab on Saved, with its pagination and scroll position intact.
+Open a separate item tab while processing the current item. Never use the Saved tab for an item.
+Close the item tab after success, failure, or skip, before opening the next one. Preserve unrelated tabs and the login session.
+Use the returned item_directory for every item artifact, including extracted frames and intermediate files.
+Confirm the stored content and cover before running node acquire.mjs --cleanup <item_directory>.
+Confirm removal before acquiring another item. The helper rejects another acquisition while the work directory contains earlier artifacts.
+Finalize failed items and remove their files too. Stop if persistence remains uncertain or cleanup fails.
+Keep the shared model and dependencies during the run. Remove the whole temporary workspace after the run, including on failure.
 
 Run node scripts/build-runtime.mjs after editing runtime files. The build rejects a stale runtime bundle.
 

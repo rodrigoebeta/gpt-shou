@@ -1,10 +1,11 @@
-import { readFile, writeFile, mkdir, mkdtemp } from 'node:fs/promises';
-import { resolve, join, dirname } from 'node:path';
+import { readFile, writeFile, mkdir, mkdtemp, readdir, realpath, lstat, rm } from 'node:fs/promises';
+import { resolve, join, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 
 const base = 'https://www.instagram.com';
+const runtimeDirectory = dirname(fileURLToPath(import.meta.url));
 const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
 export class AcquisitionError extends Error {
   constructor(code, retryAt = null) { super(code); this.code = code; this.retryAt = retryAt; }
@@ -77,6 +78,28 @@ export async function acquireProduct(value, session) {
   if (!video) throw new AcquisitionError('VIDEO_UNAVAILABLE');
   return {source,product,video};
 }
+async function workRoot(runtime) {
+  const work = join(await realpath(runtime), 'work');
+  await mkdir(work, {recursive:true, mode:0o700});
+  if ((await lstat(work)).isSymbolicLink() || await realpath(work) !== work) throw new AcquisitionError('INVALID_WORK_DIRECTORY');
+  return work;
+}
+export async function createItemWorkspace(sourceKey, runtime = runtimeDirectory) {
+  if (!/^[A-Za-z0-9_-]{3,64}$/.test(sourceKey)) throw new AcquisitionError('INVALID_SOURCE');
+  const work = await workRoot(runtime);
+  if ((await readdir(work)).length) throw new AcquisitionError('ITEM_CLEANUP_REQUIRED');
+  return mkdtemp(join(work, sourceKey + '-'));
+}
+export async function cleanupItem(directory, runtime = runtimeDirectory) {
+  if (typeof directory !== 'string' || !directory) throw new AcquisitionError('INVALID_WORK_DIRECTORY');
+  const work = await workRoot(runtime);
+  const target = resolve(directory);
+  if (dirname(target) !== work || !/^[A-Za-z0-9_-]{3,64}-[A-Za-z0-9]{6}$/.test(basename(target))) throw new AcquisitionError('INVALID_WORK_DIRECTORY');
+  const entry = await lstat(target).catch(error => { if (error.code !== 'ENOENT') throw error; });
+  if (entry && (!entry.isDirectory() || entry.isSymbolicLink())) throw new AcquisitionError('INVALID_WORK_DIRECTORY');
+  await rm(target, {recursive:true, force:true});
+  return {ok:true, item_directory:target, removed:true};
+}
 async function download(session, url, path, limit) {
   const fs = await import('node:fs');
   const fd = fs.openSync(path,'wx'); let bytes = 0; const digest = createHash('sha256');
@@ -94,18 +117,18 @@ async function download(session, url, path, limit) {
 }
 export async function main(value) {
   if (process.platform!=='linux' || process.arch!=='x64') throw new AcquisitionError('CLOUD_RUNTIME_REQUIRED');
-  const runtime = dirname(fileURLToPath(import.meta.url));
+  const runtime = runtimeDirectory;
   const library = (await readFile(join(runtime,'native-path.txt'),'utf8')).trim();
   process.env.LIBCURL_PATH = library;
   const { Session, Curl } = await import('impers');
   const { curl_version } = await import('./node_modules/impers/dist/ffi/libcurl.js');
   if (!Curl.hasImpersonateSupport() || !(await readFile('/proc/self/maps','utf8')).includes(library)) throw new AcquisitionError('NATIVE_LIBRARY_UNAVAILABLE');
   const check = new Curl(); check.impersonate('chrome124'); check.cleanup();
-  const session = new Session({impersonate:'chrome124',timeout:60,connectTimeout:20,verify:true,caCert:process.env.CURL_CA_BUNDLE||process.env.SSL_CERT_FILE||'/etc/ssl/certs/ca-certificates.crt',maxRedirects:5});
   const source = sourceIdentity(value);
-  await mkdir(join(runtime,'work'),{recursive:true,mode:0o700});
-  const directory = await mkdtemp(join(runtime,'work',source.source_key+'-'));
+  const directory = await createItemWorkspace(source.source_key, runtime);
+  let session;
   try {
+    session = new Session({impersonate:'chrome124',timeout:60,connectTimeout:20,verify:true,caCert:process.env.CURL_CA_BUNDLE||process.env.SSL_CERT_FILE||'/etc/ssl/certs/ca-certificates.crt',maxRedirects:5});
     const { product, video } = await acquireProduct(value,session);
     const formats = [...video.video_versions].filter(item=>typeof item.url==='string').sort((a,b)=>(a.width*a.height)-(b.width*b.height));
     const chosen = formats.find(item=>item.width>=720)||formats[0];
@@ -116,12 +139,15 @@ export async function main(value) {
     const coverUrl = (candidates.find(item=>item.width<=640)||candidates.at(-1))?.url;
     const cover = coverUrl ? await download(session,coverUrl,join(directory,'cover'),1_048_576) : null;
     const caption = product.caption===null ? '' : typeof product.caption?.text==='string' ? product.caption.text : null;
-    const result = {ok:true,runtime_version:'1.5.0',source_key:source.source_key,source_url:source.source_url,creator:product.user?.username??null,caption,acquired_at:new Date().toISOString(),video:media,cover,streams,native_version:curl_version()};
+    const result = {ok:true,runtime_version:'1.6.0',item_directory:directory,source_key:source.source_key,source_url:source.source_url,creator:product.user?.username??null,caption,acquired_at:new Date().toISOString(),video:media,cover,streams,native_version:curl_version()};
     await writeFile(join(directory,'source.json'),JSON.stringify(result,null,2),{mode:0o600});
     return result;
-  } finally { await session.close(); }
+  } catch (error) {
+    await cleanupItem(directory, runtime);
+    throw error;
+  } finally { await session?.close(); }
 }
 if (process.argv[1] && resolve(process.argv[1])===fileURLToPath(import.meta.url)) {
-  try { console.log(JSON.stringify(await main(process.argv[2]))); }
+  try { console.log(JSON.stringify(await (process.argv[2]==='--cleanup' ? cleanupItem(process.argv[3]) : main(process.argv[2])))); }
   catch (error) { console.log(JSON.stringify({ok:false,error:{code:error instanceof AcquisitionError?error.code:'ACQUISITION_FAILED',retry_at:error instanceof AcquisitionError?error.retryAt:null}})); process.exitCode=2; }
 }

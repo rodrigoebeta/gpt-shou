@@ -760,7 +760,7 @@
           },
           "runtime_version": {
             "type": "string",
-            "const": "1.5.0"
+            "const": "1.6.0"
           },
           "manifest": {
             "type": "object",
@@ -775,7 +775,7 @@
             "properties": {
               "runtime_version": {
                 "type": "string",
-                "const": "1.5.0"
+                "const": "1.6.0"
               },
               "execution": {
                 "type": "string",

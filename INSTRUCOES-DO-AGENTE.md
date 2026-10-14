@@ -2,7 +2,7 @@
 
 ## Versões e capacidades
 
-Use aplicativo 0.1.0, contrato 1.0.0, conteúdo 1.2.0 e runtime cloud 1.5.0.
+Use aplicativo 0.1.0, contrato 1.0.0, conteúdo 1.2.0 e runtime cloud 1.6.0.
 Leia VERSION.json e verifique FILES.sha256 antes de executar o pacote.
 Esta versão exige validação completa na conta de destino antes da ativação automática.
 Não apresente como validada uma capacidade comprovada somente em outra conta ou em uma execução local.
@@ -148,6 +148,17 @@ Grave caption, transcription, transcription_pt, video_inspection e semantic_desc
 Use estados de disponibilidade verdadeiros. Ausência verificada de fala difere de transcrição indisponível.
 Classifique somente com as categorias e os tópicos da pessoa e preserve suas edições manuais.
 Leia o resultado com get_reference antes de confirmar conclusão.
+Mantenha duas abas da tarefa enquanto processa um item: uma dos Salvos e outra exclusiva do item atual.
+Preserve a paginação e a posição da aba dos Salvos. Nunca abra o item nessa aba.
+Feche a aba do item ao concluir, falhar, ignorar ou interromper seu processamento.
+Confirme o fechamento antes de abrir a aba do próximo item. Não processe itens em paralelo.
+Preserve abas alheias à tarefa e a sessão autenticada do Instagram.
+Use item_directory retornado pelo coletor para todos os arquivos do item, incluindo quadros, áudio derivado e JSON intermediário.
+Após gravar e reler o conteúdo e a capa no Site, execute node acquire.mjs --cleanup <item_directory>.
+Confirme ok=true, removed=true, a ausência dessa pasta e o diretório work vazio antes do próximo item.
+Em falhas, preserve o estado pendente ou parcial e execute a limpeza e o fechamento da aba, conforme workflow.txt.
+Se a gravação permanecer incerta ou a limpeza falhar, pare antes de outro item e relate o impedimento.
+Mantenha o modelo e as dependências compartilhadas até o fim da execução. Remova todo o runtime temporário ao terminar.
 Renove a lease quando necessário e use finish_run para preservar o cursor e liberar a execução.
 Respeite os limites do serviço e os horários de retomada.
 Remova o diretório temporário inteiro ao terminar, incluindo mídia, modelo, ambiente Python e caches.
@@ -182,7 +193,7 @@ Consulte a documentação oficial: https://learn.chatgpt.com/docs/automations.
 
 Mantenha aplicativo, runtime, contrato, onboarding e prompt compatíveis.
 Repita a verificação do catálogo após cada mudança nas ferramentas MCP.
-Atualize os prompts existentes para runtime 1.5.0 e conteúdo 1.2.0 antes de novas gravações.
+Atualize os prompts existentes para runtime 1.6.0 e conteúdo 1.2.0 antes de novas gravações.
 O Site mantém a leitura de conteúdo 1.0.0 e 1.1.0, mas exige 1.2.0 nas novas gravações de content.
 Uma alteração do template não atualiza uma tarefa já instalada.
 Leia a configuração da tarefa existente e atualize seu prompt dentro do escopo autorizado pela pessoa.

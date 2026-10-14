@@ -1,4 +1,4 @@
-ShouBox cloud runtime 1.5.0
+ShouBox cloud runtime 1.6.0
 
 Run media acquisition and analysis only in ChatGPT Work cloud execution.
 Use this installation's native ShouBox tools and the owner's cloud Instagram session.
@@ -23,6 +23,15 @@ Require Linux x86_64, Python with venv, FFmpeg, ffprobe, and access to the packa
 Keep enough lease time for each command and renew the lease before further processing.
 
 Use the authenticated cloud browser to discover the owner's Saved Reels and selected collections.
+Track browser tab IDs at the start. Use exactly two task tabs while inspecting or processing an item.
+Keep one discovery tab on Saved or the current collection, with its pagination and scroll position intact.
+Open a separate, temporary item tab for the current source. Never navigate the discovery tab to an item.
+Do not process items in parallel or open tabs for later items.
+Close the item tab in a finalization step after success, failure, skip, or interruption.
+Confirm that tab ID is absent before opening the next item tab. Keep the discovery tab open between items.
+Apply this rule to discovery checks too, including already processed Reels and non-Reel posts.
+Close only tabs created for this task. Preserve unrelated tabs and the authenticated browser session.
+If tab closure fails, stop before the next item and report the problem.
 Obey the configured scope, initial-import choice, cursor, and cooldowns from start_run.
 Read baseline.status from start_run or a fresh get_discovery response.
 Use set_import_mode only for the owner's explicit installation choice, before the first discovery write.
@@ -86,6 +95,10 @@ Do not export browser credentials into tool results or logs.
 
 Run node acquire.mjs <source_url> in the cloud runtime directory.
 The helper returns the actual caption, temporary video and cover paths, and technical stream metadata.
+Use its item_directory for all item artifacts, including frames, contact sheets, derived audio, and intermediate JSON.
+Keep shared dependencies and the speech model outside item_directory for reuse during this run.
+The helper rejects another acquisition with ITEM_CLEANUP_REQUIRED while the work directory contains an earlier item.
+Resolve that item's persistence and cleanup first. Never bypass this check with another runtime directory.
 It currently acquires publicly accessible posts anonymously.
 If acquisition reports LOGIN_REQUIRED or ACCESS_RESTRICTED, preserve the reference as pending.
 Do not assume that cloud-browser login authenticates the helper.
@@ -135,7 +148,21 @@ Use the original evidence and its supported semantic description to select categ
 Keep the outcome partial when required inspection is unavailable.
 Do not replace an existing complete reference with a failed retry result.
 Read back with get_reference and include_content=true before reporting completion.
+Confirm both the stored content and cover before removing a successful item's temporary files.
+Run node acquire.mjs --cleanup <item_directory> after that confirmation and before starting the next item.
+Require ok=true and removed=true. Verify that item_directory no longer exists and the runtime work directory is empty.
+Remove any task-created item files outside that directory too. Never remove stored Site content or covers.
+Close the current item tab and verify its absence, while preserving the discovery tab and its list position.
+For a failed item, finish bounded retries and preserve its pending or partial state before finalization.
+If a write result is uncertain, read back the reference before deciding its state.
+If persistence cannot be verified, stop the batch and report the uncertainty. Do not report completion.
+Always attempt item-file cleanup and item-tab closure independently, including after errors or interruption.
+If either cleanup fails, stop before acquiring another item and report the failure.
+The acquisition helper removes its item directory when acquisition fails after directory creation.
+Keep the shared model, virtual environment, and dependency caches until this run ends.
 Renew the run lease before it expires and use current reference revisions for writes.
 Finish every acquired run through finish_run with checkpoint cursors and required cooldowns.
-Remove the temporary directory, including media, model, virtual environment, caches, and private responses, after the run.
+Remove the whole temporary runtime directory after the run, including on error, interruption, or failed finish_run.
+Include remaining media, model, virtual environment, caches, and private responses in that final cleanup.
+Close any remaining task-created item tab. Preserve the discovery tab and the authenticated browser session.
 Return a concise progress report and any required user action.

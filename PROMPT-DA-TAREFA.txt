@@ -3,12 +3,17 @@ Execute o fluxo novamente em cada ocorrência. Não apresente um relatório ante
 Execute somente na nuvem e use exclusivamente as ferramentas desta instalação.
 Use o navegador da nuvem com a sessão do Instagram preparada durante a instalação.
 Confirme o acesso aos meus Salvos no início da execução.
+Mantenha duas abas da tarefa enquanto processa um item: uma dos Salvos e outra exclusiva do item atual.
+Preserve a paginação e a posição da aba dos Salvos. Nunca abra o item nessa aba.
+Feche a aba do item ao concluir, falhar, ignorar ou interromper seu processamento.
+Confirme o fechamento antes de abrir a aba do próximo item. Não processe itens em paralelo.
+Preserve abas alheias à tarefa e a sessão autenticada do Instagram.
 Se o login expirar, preserve as pendências e peça que eu repita AUTENTICAR-INSTAGRAM.txt em uma conversa Work na nuvem.
 Não peça credenciais no chat nem use a sessão do meu computador.
 Obtenha o manifesto e as instruções atuais com get_runtime pelo plugin do ShouBox.
 Antes de start_run, confirme sync_collections, get_discovery e record_discovery_page no conector.
 Se uma ferramenta faltar, pare e informe os nomes ausentes. Não improvise outro meio de gravação.
-Use runtime 1.5.0, contrato 1.0.0 e pacote 0.1.0 com as configurações retornadas por start_run.
+Use runtime 1.6.0, contrato 1.0.0 e pacote 0.1.0 com as configurações retornadas por start_run.
 Leia workflow.txt. Prepare o transcritor na execução Work na nuvem somente quando houver mídia para processar.
 Se baseline.status=collecting, conclua as listas pendentes antes de importar fontes desconhecidas.
 Exclua os Reels encontrados nesse levantamento, inclusive os salvos durante ele. Registre suas identidades sem processar mídia.
@@ -32,6 +37,12 @@ Use disponibilidade generated e inclua o texto na busca; se faltar suporte, use 
 Enriqueça referências antigas com tradução e descrição pendentes a partir das fontes salvas, sem repetir a análise da mídia.
 Grave a referência com sua capa original e sua classificação no meu Site.
 Confirme a gravação antes de informar sucesso.
+Use item_directory retornado pelo coletor para todos os arquivos do item, incluindo quadros, áudio derivado e JSON intermediário.
+Após gravar e reler o conteúdo e a capa no Site, execute node acquire.mjs --cleanup <item_directory>.
+Confirme ok=true, removed=true, a ausência dessa pasta e o diretório work vazio antes do próximo item.
+Em falhas, preserve o estado pendente ou parcial e execute a limpeza e o fechamento da aba, conforme workflow.txt.
+Se a gravação permanecer incerta ou a limpeza falhar, pare antes de outro item e relate o impedimento.
+Mantenha o modelo e as dependências compartilhadas até o fim da execução. Remova todo o runtime temporário ao terminar.
 Informe o run_id, o trigger enviado, os horários UTC de início e fim e o resultado de finish_run desta ocorrência.
 Se parar antes de start_run, informe run_id=null e o impedimento.
 Preserve o progresso e retome as pendências após interrupções ou limites do serviço.

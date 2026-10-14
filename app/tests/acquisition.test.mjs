@@ -1,6 +1,64 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {sourceIdentity,mediaUrl,acquireProduct,inspectResponse} from '../runtime/acquire.mjs';
+import {sourceIdentity,mediaUrl,acquireProduct,inspectResponse,createItemWorkspace,cleanupItem} from '../runtime/acquire.mjs';
+import {mkdir,mkdtemp,writeFile,readFile,readdir,rm,symlink,realpath} from 'node:fs/promises';
+import {resolve,join,dirname} from 'node:path';
+
+async function fixture(t) {
+  const cache = resolve('.cache');
+  await mkdir(cache, {recursive:true});
+  const root = await mkdtemp(join(cache, 'item-cleanup-'));
+  t.after(async () => {
+    assert.equal(dirname(root), cache);
+    await rm(root, {recursive:true, force:true});
+  });
+  return realpath(root);
+}
+
+test('sequential items require cleanup and preserve shared runtime files', async t => {
+  const root = await fixture(t);
+  await mkdir(join(root, '.asr-probe'));
+  await writeFile(join(root, '.asr-probe', 'model.fixture'), 'shared model fixture');
+  for (const key of ['AbC123', 'XyZ987']) {
+    const item = await createItemWorkspace(key, root);
+    await mkdir(join(item, 'frames'));
+    for (const name of ['video.mp4', 'cover', 'source.json', 'frames/frame.fixture']) {
+      await writeFile(join(item, name), 'synthetic bytes, no media processing');
+    }
+    await assert.rejects(() => createItemWorkspace('Next123', root), {code:'ITEM_CLEANUP_REQUIRED'});
+    assert.equal((await cleanupItem(item, root)).removed, true);
+    assert.equal((await cleanupItem(item, root)).removed, true);
+    assert.deepEqual(await readdir(join(root, 'work')), []);
+    assert.equal(await readFile(join(root, '.asr-probe', 'model.fixture'), 'utf8'), 'shared model fixture');
+  }
+});
+
+test('cleanup rejects parent, shared, unrelated, and symlink targets', async t => {
+  const root = await fixture(t);
+  const outside = join(root, 'unrelated');
+  await mkdir(outside);
+  await writeFile(join(outside, 'keep.fixture'), 'keep');
+  const item = await createItemWorkspace('AbC123', root);
+  for (const path of [root, join(root,'work'), outside, join(item,'frames'), '', undefined]) {
+    await assert.rejects(() => cleanupItem(path, root), {code:'INVALID_WORK_DIRECTORY'});
+  }
+  const linked = join(root, 'work', 'Link123-abcdef');
+  await symlink(outside, linked, 'junction');
+  await assert.rejects(() => cleanupItem(linked, root), {code:'INVALID_WORK_DIRECTORY'});
+  await symlink(outside, join(item, 'nested-link'), 'junction');
+  await cleanupItem(item, root);
+  assert.equal(await readFile(join(outside, 'keep.fixture'), 'utf8'), 'keep');
+});
+
+test('a linked work directory cannot redirect acquisition or cleanup', async t => {
+  const root = await fixture(t);
+  const outside = join(root, 'unrelated');
+  await mkdir(outside);
+  await symlink(outside, join(root, 'work'), 'junction');
+  await assert.rejects(() => createItemWorkspace('AbC123', root), {code:'INVALID_WORK_DIRECTORY'});
+  await assert.rejects(() => cleanupItem(join(root, 'work', 'AbC123-abcdef'), root), {code:'INVALID_WORK_DIRECTORY'});
+  assert.deepEqual(await readdir(outside), []);
+});
 
 test('source parsing normalizes Instagram links and rejects non-source URLs',()=>{
   const expected=sourceIdentity('https://www.instagram.com/reel/AbC123/');
