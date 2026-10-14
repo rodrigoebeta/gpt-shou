@@ -1,8 +1,9 @@
 Capture meus Reels salvos do Instagram para o ShouBox em SITE_URL.
-Execute novamente em cada ocorrência, somente no Work na nuvem.
+Execute novamente em cada ocorrência, somente no Work pelo aplicativo do ChatGPT no seu celular.
 Use a skill capturar-favoritos deste plugin e o workflow.txt atual retornado por get_runtime.
-Use runtime 1.7.2 ou uma versão compatível posterior, contrato 1.0.0 e pacote da API 0.1.0.
-Confirme o acesso aos Salvos. Use trigger=scheduled nesta ocorrência automática.
+Use runtime 1.7.3 ou uma versão compatível posterior, contrato 1.0.0 e pacote da API 0.1.0.
+Use trigger=scheduled nesta ocorrência automática.
+Confirme o acesso aos Salvos somente depois de processar os pendentes, ao começar a descoberta.
 Preserve o escopo, a importação inicial, as edições manuais e as referências removidas.
 Continue a descoberta e o processamento até terminar o trabalho elegível ou encontrar um limite real do serviço.
 Não pare somente porque uma página ou alguns itens terminaram.
@@ -12,7 +13,9 @@ Confirme cada página de descoberta no Site antes de obter mídia.
 Depois de cada página descoberta, processe seus novos pendentes elegíveis antes de descobrir outra página.
 Processe os itens pendentes um por vez e percorra todos os next_pending_cursor da lease atual.
 Renove a lease antes do vencimento. Use pending_cursor=null somente no início de uma nova lease ou na consulta final de novos pendentes.
-Grave e releia cada resultado. Remova os arquivos do item e feche sua aba antes do próximo.
+Leia o conteúdo salvo com include_content=true antes de obter mídia. Complete os campos textuais com as evidências existentes.
+Não abra os Salvos nem o Reel para verificar acesso aos itens pendentes. Obtenha mídia somente para as modalidades ausentes.
+Grave e releia cada resultado. Remova os arquivos e feche qualquer aba que tenha criado para esse item.
 Preserve a aba dos Salvos e sua posição. Remova o runtime temporário ao terminar.
 Preserve a fala original, a tradução integral para português, a inspeção visual e a descrição semântica verificadas.
 Considere a ausência confirmada de fala um resultado válido, com transcription e transcription_pt vazios e absent.

@@ -2,12 +2,12 @@
 
 ## Versões e capacidades
 
-Use aplicativo 0.1.0, contrato 1.0.0, conteúdo 1.2.0 e runtime cloud 1.7.2.
+Use aplicativo 0.1.0, contrato 1.0.0, conteúdo 1.2.0 e runtime cloud 1.7.3.
 Leia VERSION.json e verifique FILES.sha256 antes de executar o pacote.
 Esta versão exige validação completa na conta de destino antes da ativação automática.
 Não apresente como validada uma capacidade comprovada somente em outra conta ou em uma execução local.
 
-Use o ChatGPT Work na nuvem com ferramentas de código, acesso à rede e navegador cloud autenticado.
+Use o ChatGPT Work pelo aplicativo do ChatGPT no seu celular com ferramentas de código, acesso à rede e navegador cloud autenticado.
 Verifique também a disponibilidade de transcrição e inspeção visual real da mídia nesse ambiente.
 Não use um computador local como substituto da execução cloud.
 Não exija uma API paga de modelos.
@@ -53,7 +53,7 @@ Não ative a tarefa se uma escolha solicitada não puder ser configurada nesta v
 ## Preparação do acesso ao Instagram
 
 Prepare o login antes de configurar a tarefa agendada.
-Conduza uma conversa interativa separada no Work na nuvem, dedicada ao acesso ao Instagram.
+Conduza uma conversa interativa separada no Work pelo aplicativo do ChatGPT no seu celular, dedicada ao acesso ao Instagram.
 Use AUTENTICAR-INSTAGRAM.txt nessa conversa. Mantenha "run on this computer" desligado quando essa opção aparecer.
 Verifique a disponibilidade real do navegador da nuvem.
 Use o fluxo seguro de login oferecido pelo ChatGPT e aguarde a participação da pessoa.
@@ -64,7 +64,7 @@ O navegador da nuvem possui uma sessão separada do navegador do computador da p
 Não processe mídia nem importe referências durante essa preparação.
 Informe o impedimento se o navegador ou o fluxo de login não estiver disponível.
 
-Depois da preparação, execute o teste de descoberta em outra execução Work na nuvem.
+Depois da preparação, execute o teste de descoberta em outra execução Work pelo aplicativo do ChatGPT no seu celular.
 Confirme o acesso aos Salvos sem nova intervenção de login.
 Use uma execução manual bem-sucedida para validar o método de captura. Não exija aguardar uma ocorrência pelo horário.
 Se a sessão expirar, preserve as pendências e solicite novamente a preparação interativa.
@@ -158,9 +158,12 @@ Grave caption, transcription, transcription_pt, video_inspection e semantic_desc
 Use estados de disponibilidade verdadeiros. Ausência verificada de fala difere de transcrição indisponível.
 Classifique somente com as categorias e os tópicos da pessoa e preserve suas edições manuais.
 Leia o resultado com get_reference antes de confirmar conclusão.
-Mantenha duas abas da tarefa enquanto processa um item: uma dos Salvos e outra exclusiva do item atual.
+Leia cada pendente com include_content=true. Use os textos e a capa existentes antes de obter mídia.
+Não verifique os Salvos nem abra o Reel no navegador como pré-requisito para processar pendentes.
+Obtenha o vídeo pela source_url registrada somente quando faltar análise audiovisual. Preserve modalidades já verificadas.
+Mantenha no máximo uma aba dos Salvos durante a descoberta e uma aba temporária quando a inspeção do item for necessária.
 Preserve a paginação e a posição da aba dos Salvos. Nunca abra o item nessa aba.
-Feche a aba do item ao concluir, falhar, ignorar ou interromper seu processamento.
+Feche qualquer aba criada para o item ao concluir, falhar, ignorar ou interromper seu processamento.
 Confirme o fechamento antes de abrir a aba do próximo item. Não processe itens em paralelo.
 Preserve abas alheias à tarefa e a sessão autenticada do Instagram.
 Use item_directory retornado pelo coletor para todos os arquivos do item, incluindo quadros, áudio derivado e JSON intermediário.
@@ -186,7 +189,7 @@ No modo somente novos, conclua primeiro o levantamento e confirme que ele não c
 Depois, peça à pessoa que salve um Reel ainda desconhecido no escopo escolhido e valide sua importação.
 Use termos da transcrição, da tradução, da descrição semântica e da descrição visual que não apareçam no criador ou na categoria.
 Crie a tarefa cloud somente depois de verificar as capacidades e as permissões necessárias.
-Use o modo Work pelo Desktop ou celular. No Desktop, mantenha "run on this computer" desligado.
+Use o Work pelo aplicativo do ChatGPT no seu celular, especialmente para autenticar o Instagram.
 Não substitua esse fluxo por uma tarefa Chat criada pelo agendador web.
 Substitua SITE_URL em PROMPT-DA-TAREFA.txt pela URL literal desta instalação.
 Use o intervalo ou os horários e o fuso escolhidos pela pessoa.
@@ -201,7 +204,7 @@ Consulte a documentação oficial: https://learn.chatgpt.com/docs/automations.
 
 Mantenha aplicativo, runtime, contrato, onboarding e prompt compatíveis.
 Repita a verificação do catálogo após cada mudança nas ferramentas MCP.
-Atualize os prompts existentes para runtime 1.7.2 e conteúdo 1.2.0 antes de novas gravações.
+Atualize os prompts existentes para runtime 1.7.3 e conteúdo 1.2.0 antes de novas gravações.
 O Site mantém a leitura de conteúdo 1.0.0 e 1.1.0, mas exige 1.2.0 nas novas gravações de content.
 Uma alteração do template não atualiza uma tarefa já instalada.
 Leia a configuração da tarefa existente e atualize seu prompt dentro do escopo autorizado pela pessoa.
@@ -227,3 +230,27 @@ If approval remains rejected, suspend that action and continue permitted stages 
 Save partial results. Do not retry the rejected action for each item.
 A retomada automática depende de uma tarefa na nuvem com um horário confirmado.
 Não declare a biblioteca completa quando houver listas incompletas ou itens adiados.
+
+## Atualizações
+
+Use a skill instalar também para atualizar uma instalação existente.
+Leia VERSION.json e app/server/release.json na mesma revisão completa do repositório oficial.
+Verifique FILES.sha256. Use release_version para a distribuição; package_version continua sendo a versão do contrato da API.
+Consulte a lease antes de publicar. Aguarde uma captura ativa terminar. Não a interrompa para atualizar.
+Preserve o project_id, os dados, as capas, as edições manuais, os bindings, os segredos server-only e as migrações aplicadas.
+Preserve o acesso privado, o plugin e os agendamentos existentes.
+Use o fluxo oficial do Sites para abrir as fontes existentes antes de aplicar a atualização.
+Teste e publique o mesmo Site. Atualize suas skills pelo plugin existente.
+Revise os prompts das tarefas autorizadas com o modelo atual sem mudar seus horários ou fuso.
+Informe uma atualização de tarefa pendente se o host não oferecer a ferramenta necessária. Não crie uma duplicata.
+Confirme as versões publicadas e o resultado de /api/updates. Não execute login nem captura apenas para atualizar.
+
+A partir da versão 1.7.3, o Site consulta o manifesto público de versão no GitHub.
+A consulta ocorre ao abrir a biblioteca, ao voltar para a aba e a cada 15 minutos enquanto ela está visível.
+O servidor usa cache de 15 minutos. Uma publicação pode demorar até cerca de 30 minutos para aparecer em uma aba aberta.
+O manifesto contém somente a versão e um resumo. A consulta não envia dados da biblioteca nem credenciais ao GitHub.
+O botão prepara um pedido. A pessoa envia esse pedido no Work pelo aplicativo do ChatGPT no celular.
+O Site não inicia uma conversa nem publica código por conta própria.
+Instalações anteriores precisam receber esta atualização uma vez para passar a mostrar os próximos avisos.
+Publique app/server/release.json e VERSION.json com uma versão maior quando a atualização estiver pronta.
+Não altere a versão para cada commit. Atualize FILES.sha256 junto com a publicação.

@@ -24,3 +24,12 @@ body .nav-inactive{opacity:1!important}
 .player-panel .instagram-fallback{padding-top:8px;min-height:36px}
 @media(hover:hover) and (pointer:fine){.player-swipe-hint{visibility:hidden}}
 @media(max-width:650px){.player-panel{inset:0;transform:none;width:100%;height:100dvh;max-height:100dvh;border:0;border-radius:0;padding:max(8px,env(safe-area-inset-top)) max(8px,env(safe-area-inset-right)) max(8px,env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left));display:flex;flex-direction:column}.player-body{flex:1;min-height:0;gap:6px}.player-panel iframe{height:100%;min-height:0}.player-panel .panel-heading{flex:none}.player-position{flex:none}.player-panel .instagram-fallback{flex:none;min-height:44px}}
+
+.update-notice{margin:24px 0 28px;padding:20px 24px;border:1px solid #dce5f0;border-radius:18px;background:#f5f8fc;color:#365b80;font-size:14px;line-height:1.55}
+.update-notice-heading{display:flex;align-items:center;justify-content:space-between;gap:24px}
+.update-notice-heading strong{font-weight:650}.update-notice p{margin:4px 0 0;max-width:75ch}.update-notice-heading p{color:#52657e;font-size:13px}
+.update-notice button{border-radius:10px;min-height:44px;flex-shrink:0}.update-instructions{margin-top:20px;padding-top:18px;border-top:1px solid #dce5f0}
+.update-instructions ol{padding-left:22px;margin:16px 0;list-style:decimal}.update-instructions li{margin:6px 0}.update-instructions label{display:block;font-weight:600;margin:18px 0 8px}
+.update-instructions textarea{display:block;width:100%;padding:12px 14px;border:1px solid #ccd8e6;border-radius:10px;background:white;color:#365b80;font:inherit;line-height:1.6;resize:vertical;min-height:140px}
+.update-instructions textarea:focus-visible{outline:2px solid #557ca7;outline-offset:3px}.update-copy{display:flex;align-items:center;gap:14px;margin-top:14px}.update-copy span{font-size:13px;color:#52657e;max-width:55ch}
+@media(max-width:650px){.update-notice{padding:16px;margin-bottom:24px}.update-notice-heading{align-items:flex-start;flex-direction:column;gap:12px}.update-copy{align-items:flex-start;flex-direction:column}.update-instructions textarea{font-size:16px;min-height:210px}}

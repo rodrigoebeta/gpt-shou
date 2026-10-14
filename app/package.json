@@ -7,7 +7,7 @@
   },
   "scripts": {
     "prebuild": "node scripts/build-runtime.mjs --check",
-    "test": "node --test tests/core.test.mjs tests/discovery.test.mjs tests/acquisition.test.mjs tests/runtime.test.mjs tests/materialize.test.mjs tests/transcription.test.mjs",
+    "test": "node --test tests/core.test.mjs tests/discovery.test.mjs tests/acquisition.test.mjs tests/runtime.test.mjs tests/materialize.test.mjs tests/transcription.test.mjs tests/updates.test.mjs",
     "install:ci": "node scripts/install-ci.mjs",
     "dev": "node scripts/run-framework.mjs dev",
     "build": "node scripts/run-framework.mjs build",

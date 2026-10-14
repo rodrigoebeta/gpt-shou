@@ -5,9 +5,8 @@ description: Captura os Reels salvos do Instagram para o ShouBox, um por vez, co
 
 # Capturar favoritos
 
-Execute somente no Work na nuvem e na instalação escolhida pela pessoa.
-Leia get_runtime com file=workflow.txt. Exija runtime 1.7.2 ou uma versão compatível posterior.
-Confirme o acesso aos Salvos no navegador da nuvem.
+Execute somente no Work pelo aplicativo do ChatGPT no seu celular e na instalação escolhida pela pessoa.
+Leia get_runtime com file=workflow.txt. Exija runtime 1.7.3 ou uma versão compatível posterior.
 Adquira start_run com mode=acquire e pending_cursor=null.
 Use trigger=scheduled somente quando o host identificar uma ocorrência agendada.
 Use trigger=manual para uma mensagem da pessoa ou um teste manual.
@@ -16,6 +15,7 @@ Use [processar-pendente](../processar-pendente/SKILL.md) primeiro, com a lease a
 Percorra toda a fila elegível existente antes de verificar novos Salvos, percorrer coleções ou registrar descobertas.
 Não espere itens com retry_at futuro nem repita tentativas desta execução.
 Ignore identidades baseline_only. Inicie o levantamento quando não houver pendentes elegíveis.
+Somente então confirme o acesso aos Salvos no navegador remoto. Use autenticar se o login for necessário.
 
 Continue até concluir as listas selecionadas e tentar todos os itens elegíveis.
 Não transforme uma página, um lote ou alguns itens bem-sucedidos em uma condição de conclusão.
@@ -30,8 +30,9 @@ Conclua todas as listas iniciais quando baseline.status=collecting. Ignore as id
 Marque end_reached somente quando o navegador comprovar o fim real da lista.
 
 Use [processar-pendente](../processar-pendente/SKILL.md) para os itens registrados.
-Mantenha uma aba de descoberta e uma aba do item atual.
-Confirme a remoção dos arquivos e o fechamento da aba antes do próximo item.
+Abra uma aba de descoberta somente ao começar o levantamento dos Salvos.
+Abra uma aba do item somente quando faltar uma informação que exija inspeção no navegador.
+Confirme a remoção dos arquivos criados e o fechamento de qualquer aba do item antes do próximo item.
 Preserve as edições manuais, as referências removidas e o conteúdo já verificado.
 
 Trate uma falha de download do modelo como falha da análise.

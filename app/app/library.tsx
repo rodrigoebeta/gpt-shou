@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ReelPlayer } from "@/components/reel-player";
+import { UpdateNotice } from "@/components/update-notice";
 
 type Option={id:string;label:string};
 type Group="category"|"topic"|"creator"|"collection";
@@ -141,7 +142,7 @@ export default function Library({initial}:{initial:string}) {
       <form className="search-capsule" role="search" onSubmit={e=>{e.preventDefault();setRevision(v=>v+1);}}><Search size={18} aria-hidden="true"/><Input ref={search} className="search-input" value={query} onChange={e=>setQuery(e.target.value)} placeholder="Uma ideia, um assunto, um criador…" aria-label="Encontrar uma referência" maxLength={500} autoComplete="off"/><Button className="search-action" size="icon" aria-label="Buscar" type="submit"><ArrowRight size={16}/></Button></form>
       <div className="account-capsule"><Settings session={session} onUpdate={next=>{setSession(next);setRevision(v=>v+1);}} onError={setNotice}/><DropdownMenu.Root><DropdownMenu.Trigger asChild><Button variant="ghost" className="account-button" aria-label="Meu espaço"><span aria-hidden="true">{initial}</span></Button></DropdownMenu.Trigger><DropdownMenu.Portal><DropdownMenu.Content className="card-menu-content" align="end"><DropdownMenu.Item asChild><a href="/signout-with-chatgpt?return_to=%2F" target="_top"><LogOut size={15}/>Sair</a></DropdownMenu.Item></DropdownMenu.Content></DropdownMenu.Portal></DropdownMenu.Root></div>
     </header>
-    <main className="workspace" id="library"><div className="library-heading"><h1>{removed?"Removidos":"Biblioteca"}</h1></div>
+    <main className="workspace" id="library"><UpdateNotice enabled={!!session}/><div className="library-heading"><h1>{removed?"Removidos":"Biblioteca"}</h1></div>
       <section className="toolbar" aria-label="Filtros da biblioteca"><div className="filter-controls"><SlidersHorizontal className="filter-symbol" size={16} aria-hidden="true"/>{(Object.keys(labels) as Group[]).map(group=><FilterPicker key={group} group={group} values={selected[group]} onChange={values=>setSelected(old=>({...old,[group]:values}))}/>)}{active&&<Button variant="ghost" className="clear-filters" onClick={clear}>Limpar tudo</Button>}</div>
       {chips.length>0&&<div className="selection-chips" aria-label="Filtros selecionados">{chips.slice(0,3).map(item=><Button variant="ghost" key={`${item.group}:${item.id}`} aria-label={`Remover filtro ${item.label}`} onClick={()=>setSelected(old=>({...old,[item.group]:old[item.group].filter(value=>value.id!==item.id)}))}>{item.label}<X size={12}/></Button>)}{chips.length>3&&<span className="more-chips">+{chips.length-3}</span>}</div>}</section>
       <div className="results-bar"><p role="status" aria-live="polite">{loading?"Buscando":`${result.total} ${result.total===1?"referência":"referências"}`}</p>

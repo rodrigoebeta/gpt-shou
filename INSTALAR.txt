@@ -3,12 +3,12 @@ Leia INSTRUCOES-DO-AGENTE.md e confira a versão e a integridade dos arquivos.
 Mantenha a instalação e os dados privados para minha conta.
 Realize a preparação técnica e o provisionamento por mim.
 Guie-me nas autorizações, no login do Instagram e nas preferências necessárias.
-Prepare o login em uma conversa Work na nuvem antes de configurar a tarefa agendada.
+Prepare o login em uma conversa Work pelo aplicativo do ChatGPT no seu celular antes de configurar a tarefa agendada.
 Use AUTENTICAR-INSTAGRAM.txt e confirme o acesso aos meus Salvos nessa preparação.
-Use meu ChatGPT na nuvem para obter os Reels salvos, transcrever a fala, descrever o vídeo e categorizar as referências.
+Use o Work pelo aplicativo do ChatGPT no seu celular para obter os Reels salvos, transcrever a fala, descrever o vídeo e categorizar as referências.
 Armazene os textos no backend para a busca por palavras-chave.
 Mostre as referências, as capas e a reprodução original no meu ShouBox.
-Valide o fluxo completo com uma captura manual na nuvem antes de ativar a tarefa agendada.
+Valide o fluxo completo com uma captura manual nesse ambiente antes de ativar a tarefa agendada.
 Deixe-me escolher livremente o intervalo e o fuso. Confirme que a tarefa salva corresponde às minhas escolhas.
 Não exija aguardar uma ocorrência pelo horário para concluir a validação.
 Informe qualquer etapa ainda indisponível nesta versão.

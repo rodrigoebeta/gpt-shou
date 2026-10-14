@@ -1,4 +1,4 @@
-"""Prepare and test speech transcription only inside a Work cloud task."""
+"""Prepare and test speech transcription only inside a remote Work task started through the ChatGPT mobile app."""
 import hashlib
 import importlib.metadata
 import json
@@ -219,7 +219,7 @@ def speech_engine():
 
 def main():
     if platform.system() != "Linux" or platform.machine() != "x86_64":
-        raise SystemExit("Run only in the Work cloud Linux x86_64 environment.")
+        raise SystemExit("Run only in the remote Work Linux x86_64 environment started through the ChatGPT mobile app.")
     if len(sys.argv) != 2:
         raise SystemExit("Use --prepare, --check, --model, or a cloud media file path.")
     root = Path(__file__).resolve().parent

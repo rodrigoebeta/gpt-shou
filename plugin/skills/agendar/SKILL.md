@@ -1,9 +1,12 @@
 ---
 name: agendar
-description: Agenda a captura de favoritos do ShouBox em uma tarefa Work na nuvem, no intervalo e fuso escolhidos pela pessoa.
+description: Agenda a captura de favoritos do ShouBox em uma tarefa Work pelo aplicativo do ChatGPT no seu celular, no intervalo e fuso escolhidos pela pessoa.
 ---
 
 # Agendar a captura
+
+Oriente a configuração pelo Work no aplicativo do ChatGPT no celular.
+As ocorrências usam a execução remota do Work. Não exija que o aplicativo permaneça aberto.
 
 Confirme o Site, o intervalo e o fuso solicitados.
 Reutilize escolhas explícitas já fornecidas. Pergunte somente pelos valores ausentes.
@@ -16,7 +19,7 @@ Para uma tarefa ligada ao Site, leia get_site e suas automations.
 Use create_schedule somente com o schedule_request_id retornado por essa leitura.
 Repita o mesmo request_id se a resposta da criação se perder.
 Não crie uma duplicata para substituir uma atualização indisponível.
-Não use uma automação local do Codex como substituto de uma tarefa Work na nuvem.
+Não use uma automação local do Codex como substituto de uma tarefa Work pelo aplicativo do ChatGPT no seu celular.
 
 Use o [modelo de prompt](references/prompt.txt) e substitua SITE_URL pelo endereço confirmado.
 Inclua a instrução capturar-favoritos e a leitura do workflow atual.

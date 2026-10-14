@@ -2,7 +2,7 @@ export class AppError extends Error {
   constructor(public code: string, message = "Request unavailable.", public retryAt: string | null = null, public revision: number | null = null) { super(message); }
 }
 
-export async function readBody(request:Request):Promise<any>{
+export async function readBody(request:Pick<Request,"body">):Promise<any>{
   const reader=request.body?.getReader();
   if(!reader)throw new AppError("INVALID_ARGUMENT","Request body is required.");
   const chunks:Uint8Array[]=[];let length=0;

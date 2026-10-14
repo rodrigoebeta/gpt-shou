@@ -6,7 +6,7 @@ Cada pessoa usa seu próprio Site, seus dados e suas conexões. O produto não e
 
 ## Instalação
 
-Abra uma conversa Work na nuvem e envie este comando:
+Abra uma conversa Work pelo aplicativo do ChatGPT no seu celular e envie este comando:
 
 ```text
 Instale meu ShouBox a partir de https://github.com/rodrigoebeta/gpt-shoubox.
@@ -21,7 +21,7 @@ Se você recebeu um arquivo ZIP, anexe-o e envie o texto de INSTALAR.txt.
 O ChatGPT usa INSTRUCOES-DO-AGENTE.md para instalar e verificar o aplicativo.
 Você fornece as autorizações, o acesso ao Instagram e suas preferências durante a configuração.
 
-Antes de configurar a tarefa, autentique o Instagram em uma conversa Work na nuvem.
+Antes de configurar a tarefa, autentique o Instagram em uma conversa Work pelo aplicativo do ChatGPT no seu celular.
 Use AUTENTICAR-INSTAGRAM.txt nessa conversa e mantenha "run on this computer" desligado.
 Conclua o login pelo formulário seguro que o ChatGPT apresentar.
 O ChatGPT confirma o acesso aos seus Salvos antes de continuar a instalação.
@@ -71,3 +71,12 @@ A instalação adiciona essas skills ao plugin do seu próprio Site.
 A fila preserva cada tentativa após interrupções e prioriza itens ainda não tentados.
 Uma falha da transcrição mantém o item parcial e permite continuar as etapas disponíveis.
 Cancelamentos e limites da plataforma continuam possíveis. A tarefa agendada retoma o trabalho na próxima ocorrência.
+
+## Atualizar
+
+O ShouBox avisa na biblioteca quando uma nova versão fica disponível no GitHub.
+Selecione **Ver atualização** e copie o pedido. Envie-o no Work pelo aplicativo do ChatGPT no seu celular.
+O ChatGPT atualiza o Site e as skills, preservando seus dados e suas configurações.
+O aviso aparece após a verificação periódica; não é uma notificação do celular.
+Instalações anteriores à versão 1.7.3 precisam receber esta atualização uma vez para habilitar os avisos.
+Para essa primeira atualização, envie: "Atualize meu ShouBox pelo pacote oficial https://github.com/rodrigoebeta/gpt-shoubox. Preserve meu Site e meus dados."

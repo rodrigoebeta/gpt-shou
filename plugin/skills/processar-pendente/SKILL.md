@@ -5,18 +5,31 @@ description: Processa a fila pendente do ShouBox por páginas, preserva a posiç
 
 # Processar pendentes
 
-Execute somente no Work na nuvem.
+Execute somente no Work pelo aplicativo do ChatGPT no seu celular.
 Leia o workflow.txt atual com get_runtime antes de processar a fila.
 Reutilize a lease ativa desta tarefa. Adquira uma lease somente quando não houver uma lease desta tarefa.
 Não adquira uma segunda lease para a mesma execução.
 
+Não execute autenticar nem abra os Salvos para verificar acesso nesta rotina.
+Use primeiro os textos, a capa, as classificações e a URL já registrados no Site.
+Se faltarem somente tradução, descrição semântica ou classificação, complete esses campos a partir das evidências salvas.
+Não prepare dependências nem obtenha mídia para esse enriquecimento textual.
+Se faltar transcrição ou inspeção visual, obtenha o vídeo temporário com acquire.mjs e a source_url registrada.
+Reutilize as modalidades já verificadas. Não repita uma transcrição válida para completar apenas a inspeção visual.
+O banco não armazena o vídeo permanente. Uma URL catalogada não garante que a mídia ainda esteja acessível.
+Não abra o Reel no navegador antes do auxiliar como verificação automática.
+Abra uma aba somente para obter informação necessária que falte ou investigar um erro concreto que o navegador possa esclarecer.
+Se o auxiliar retornar LOGIN_REQUIRED ou ACCESS_RESTRICTED, registre a pendência e continue nos itens permitidos.
+O login no navegador não autentica o auxiliar anônimo. Não repita esse login a cada item.
+Limpe somente os arquivos e as abas que esta execução criou.
+
 1. Guarde a página pending e seu next_pending_cursor retornados por start_run.
-2. Releia cada referência antes de processá-la. Preserve o conteúdo e as classificações manuais.
+2. Releia cada referência com include_content=true antes de processá-la. Preserve o conteúdo e as classificações manuais.
 3. Processe um item por vez conforme workflow.txt.
 4. Grave o resultado verificado com update_reference, inclusive um resultado parcial ou uma falha definitiva.
 5. Releia o conteúdo e a capa antes de declarar sucesso.
 6. Execute a limpeza do item e confirme que o diretório work ficou vazio.
-7. Feche a aba do item e confirme sua ausência.
+7. Feche a aba do item, se esta execução a abriu, e confirme sua ausência.
 8. Continue nos demais itens da página.
 9. Solicite a próxima página com start_run mode=renew e pending_cursor igual ao cursor guardado.
 10. Continue até next_pending_cursor=null e a página atual estar concluída.
