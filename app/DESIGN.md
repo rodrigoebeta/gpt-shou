@@ -236,6 +236,7 @@ Settings use a centered panel on desktop and a bottom sheet on mobile.
 Category, topic, and collection controls provide functional editing actions. Reclassification requires an explicit checkbox selection.
 Classification and playback use rounded modal panels. The playback panel includes an explicit Instagram source link.
 Notifications provide a visible close action. Their text describes the completed action or the request failure.
+Dismiss each notification after five seconds. Restart the timer for each new notification, including repeated text.
 
 ## Do's and Don'ts
 
@@ -266,3 +267,6 @@ Preserve loaded cards and the scroll position after removal or restore. Adjust t
 Keep loaded cards after a page request fails. Show an explicit retry action.
 Load the first five covers immediately. Start other cover requests within 1800px of the viewport.
 Use private browser caching for versioned covers. Keep the existing cover dimensions during loading.
+
+Keep 64px of bottom padding on desktop and 48px below 650px. Add the device safe-area inset.
+Keep this padding on the workspace when pagination ends.
