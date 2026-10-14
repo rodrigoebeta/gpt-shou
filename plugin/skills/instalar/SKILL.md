@@ -25,7 +25,8 @@ Responda no idioma da pessoa.
 Não crie outro plugin para envolver o mesmo Site.
 Não publique identidades da instalação no pacote público.
 Não declare a instalação completa sem uma gravação real e sua releitura.
-Separe a publicação, o teste manual e o teste disparado pelo horário.
+Valide o método de captura com o teste manual. Confirme a tarefa salva se a pessoa solicitar um agendamento.
+Não exija aguardar uma ocorrência pelo horário para concluir essa validação.
 Se faltar uma ferramenta necessária, indique seu nome e preserve a instalação existente.
 
 O runtime mínimo destas skills é 1.7.0. O contrato é 1.0.0; o pacote da API é 0.1.0.

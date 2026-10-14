@@ -7,6 +7,7 @@ description: Agenda a captura de favoritos do ShouBox em uma tarefa Work na nuve
 
 Confirme o Site, o intervalo e o fuso solicitados.
 Reutilize escolhas explícitas já fornecidas. Pergunte somente pelos valores ausentes.
+Deixe a pessoa escolher livremente o intervalo ou os horários. Não imponha uma frequência padrão nem dois horários diários.
 Leia as tarefas existentes antes de criar outra tarefa.
 Confirme o acesso aos Salvos e uma captura manual bem-sucedida.
 
@@ -23,8 +24,9 @@ Preserve o intervalo escolhido no agendamento, sem criar ocorrências extras par
 Informe a pessoa quando uma alteração do intervalo ajudar a concluir o acervo mais rapidamente.
 
 Confirme o identificador, o fuso, o intervalo e a próxima ocorrência retornados pelo agendador.
-Verifique uma ocorrência disparada pelo horário antes de declarar o agendamento testado.
-Uma execução manual comprova o fluxo manual, não o gatilho automático.
+Use uma execução manual bem-sucedida para validar o método de captura.
+Conclua a configuração após confirmar a tarefa salva e as escolhas da pessoa. Não exija aguardar uma ocorrência pelo horário.
+Registre o teste manual e a confirmação do agendamento separadamente. Não declare que observou um disparo automático sem essa evidência.
 Se faltar a ferramenta de criação ou atualização, entregue o prompt e indique a etapa pendente.
 Não declare que a tarefa existe sem uma confirmação do agendador.
 

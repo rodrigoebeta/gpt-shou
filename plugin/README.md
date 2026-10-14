@@ -25,4 +25,6 @@ Cada instalação recebe suas próprias conexões pelo Sites.
 
 Use runtime 1.7.0 ou uma versão compatível posterior.
 Atualize as tarefas já existentes com PROMPT-DA-TAREFA.txt; a publicação das skills não altera os prompts antigos.
-Valide uma captura manual e uma ocorrência agendada antes de declarar a instalação completa.
+Valide o método de captura com uma execução manual.
+Deixe cada pessoa escolher o intervalo e o fuso. Confirme a tarefa salva quando ela solicitar o agendamento.
+Não exija aguardar uma ocorrência pelo horário para concluir a instalação.

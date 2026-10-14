@@ -12,7 +12,8 @@ Abra uma conversa Work na nuvem e envie este comando:
 Instale meu ShouBox a partir de https://github.com/rodrigoebeta/gpt-shoubox.
 Use a versão da branch main e siga INSTALAR.txt e INSTRUCOES-DO-AGENTE.md.
 Faça o provisionamento na minha conta e mantenha meu Site e meus dados privados.
-Conduza comigo a configuração e os testes manual e agendado, do início ao fim.
+Conduza comigo a configuração e o teste manual, do início ao fim.
+Deixe-me escolher o intervalo e o fuso da captura automática.
 ```
 
 Use a execução na nuvem. Mantenha "run on this computer" desligado quando essa opção aparecer.
@@ -47,12 +48,12 @@ Confirme esse comportamento durante a validação da sua instalação.
 Abra Scheduled e selecione a execução que deseja conferir.
 Uma tarefa independente apresenta o resultado em uma conversa separada.
 Entregue esse resultado ao ChatGPT quando precisar conferir a importação.
-A conversa usada para o teste manual não substitui o resultado da execução agendada.
+O teste manual valida o método de captura. Não é necessário aguardar uma ocorrência automática para concluir essa validação.
 
 ## Estado da versão
 
-Este pacote é uma versão para validação. Teste a instalação e a operação agendada na sua própria conta.
-O agente verifica a execução na nuvem antes de ativar a atualização automática.
+Este pacote é uma versão para validação. Teste a instalação e a captura manual na nuvem, na sua própria conta.
+Escolha livremente o intervalo ou os horários da atualização automática. O agente confirma a tarefa salva conforme sua escolha.
 Se uma capacidade necessária estiver indisponível, o agente informa o impedimento e preserva os resultados já obtidos.
 
 ## Skills incluídas

@@ -45,8 +45,9 @@ Use a identidade nativa da pessoa. Não use um token de serviço como substituto
 
 ## Configuração da pessoa
 
-Confirme o escopo de Salvos ou coleções, a importação inicial, as categorias, os dois horários e o fuso.
-Verifique que as escolhas ficaram persistidas e aparecem no retorno de start_run.
+Confirme o escopo de Salvos ou coleções, a importação inicial, as categorias, o intervalo ou os horários e o fuso.
+Deixe a pessoa escolher livremente a frequência. Não imponha dois horários diários.
+Confira as escolhas da biblioteca no retorno de start_run. Confira o intervalo e o fuso na tarefa salva pelo agendador.
 Não ative a tarefa se uma escolha solicitada não puder ser configurada nesta versão.
 
 ## Preparação do acesso ao Instagram
@@ -65,7 +66,7 @@ Informe o impedimento se o navegador ou o fluxo de login não estiver disponíve
 
 Depois da preparação, execute o teste de descoberta em outra execução Work na nuvem.
 Confirme o acesso aos Salvos sem nova intervenção de login.
-Verifique também uma execução iniciada pelo horário configurado antes de concluir a validação da automação.
+Use uma execução manual bem-sucedida para validar o método de captura. Não exija aguardar uma ocorrência pelo horário.
 Se a sessão expirar, preserve as pendências e solicite novamente a preparação interativa.
 Não use a execução agendada sem supervisão como etapa de autenticação inicial.
 Consulte a documentação oficial: https://learn.chatgpt.com/docs/browser.
@@ -178,15 +179,13 @@ Use termos da transcrição, da tradução, da descrição semântica e da descr
 Crie a tarefa cloud somente depois de verificar as capacidades e as permissões necessárias.
 Use o modo Work pelo Desktop ou celular. No Desktop, mantenha "run on this computer" desligado.
 Não substitua esse fluxo por uma tarefa Chat criada pelo agendador web.
-Substitua {{SITE_URL}} em PROMPT-DA-TAREFA.txt pela URL literal desta instalação.
-Use os horários e o fuso escolhidos pela pessoa.
-Verifique uma execução realmente agendada e sua leitura de confirmação no Site.
-Não confunda um teste manual cloud com uma execução do agendador.
-Abra o resultado da ocorrência em Scheduled. Uma tarefa independente gera uma conversa separada para cada execução.
-Não use a conversa do teste manual como único registro da tarefa agendada.
-Confira run_id, trigger, horários e resultado de finish_run no relatório daquela ocorrência.
-Compare os reference_ids do relatório com a leitura atual do ShouBox.
-Não trate last_run_time, isoladamente, como prova de processamento ou como horário exato de início.
+Substitua SITE_URL em PROMPT-DA-TAREFA.txt pela URL literal desta instalação.
+Use o intervalo ou os horários e o fuso escolhidos pela pessoa.
+Confirme o identificador e a configuração retornados pelo agendador. Não crie tarefas duplicadas.
+Use o teste manual para validar o método. Não exija uma ocorrência pelo horário como etapa adicional de aprovação.
+Confira run_id, trigger=manual, horários e finish_run no relatório do teste manual.
+Compare os reference_ids desse relatório com a leitura atual do ShouBox.
+Registre separadamente a captura manual validada e a tarefa salva. Não declare um disparo automático observado sem evidência.
 Consulte a documentação oficial: https://learn.chatgpt.com/docs/automations.
 
 ## Atualizações

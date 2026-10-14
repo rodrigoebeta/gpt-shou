@@ -8,5 +8,7 @@ Use AUTENTICAR-INSTAGRAM.txt e confirme o acesso aos meus Salvos nessa preparaç
 Use meu ChatGPT na nuvem para obter os Reels salvos, transcrever a fala, descrever o vídeo e categorizar as referências.
 Armazene os textos no backend para a busca por palavras-chave.
 Mostre as referências, as capas e a reprodução original no meu ShouBox.
-Valide o fluxo completo antes de ativar a tarefa agendada.
+Valide o fluxo completo com uma captura manual na nuvem antes de ativar a tarefa agendada.
+Deixe-me escolher livremente o intervalo e o fuso. Confirme que a tarefa salva corresponde às minhas escolhas.
+Não exija aguardar uma ocorrência pelo horário para concluir a validação.
 Informe qualquer etapa ainda indisponível nesta versão.
