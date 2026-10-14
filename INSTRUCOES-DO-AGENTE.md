@@ -212,5 +212,9 @@ Processe todas as páginas next_pending_cursor da lease atual. Uma página não 
 Inicie uma nova lease com pending_cursor=null após interrupções. Preserve as âncoras de descoberta.
 Continue a descoberta durante uma falha da análise e mantenha os resultados parciais.
 Respeite os cooldowns por serviço, os cancelamentos e as rejeições de aprovação.
+Keep optional telemetry disabled before the speech engine starts.
+Use explicit owner consent through the normal approval process only when telemetry remains unavoidable.
+If approval remains rejected, suspend that action and continue permitted stages and items, unless the host declares a wider restriction.
+Save partial results. Do not retry the rejected action for each item.
 A retomada automática depende de uma tarefa na nuvem com um horário confirmado.
 Não declare a biblioteca completa quando houver listas incompletas ou itens adiados.

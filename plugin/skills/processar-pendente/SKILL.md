@@ -37,6 +37,14 @@ Não substitua uma transcrição válida por null durante uma tentativa malsuced
 Pare antes do próximo item se a gravação ou a limpeza permanecer incerta.
 Respeite as rejeições de aprovação e os cancelamentos. Não procure outra rota para executar uma ação rejeitada.
 
+Keep optional telemetry disabled before the speech engine starts.
+If telemetry remains unavoidable, use the owner's explicit consent through the normal approval process.
+Use consent only for the installation and disclosure that the owner authorizes. Never infer consent from this skill.
+If approval remains rejected, suspend the affected action for this run.
+Continue permitted discovery, acquisition, inspection, and Site writes unless the host declares a wider restriction.
+Save partial results and continue through the eligible queue. Do not retry the rejected action for each item.
+Preserve the existing stop conditions for uncertain writes, failed cleanup, cancellation, and host limits.
+
 Finalize uma lease adquirida por esta skill com finish_run.
 Devolva o controle à captura quando ela for a dona da lease.
 Informe separadamente: itens completos, parciais, adiados e bloqueados.

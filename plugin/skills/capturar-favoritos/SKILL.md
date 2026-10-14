@@ -34,6 +34,8 @@ Preserve a transcrição como indisponível e continue a descoberta e as modalid
 Não repita a preparação do transcritor em cada item após a mesma falha de infraestrutura.
 Respeite o cooldown do serviço afetado. Pare as requisições ao Instagram em caso de 429 ou perda de autenticação.
 Não contorne uma rejeição de aprovação, um cancelamento do usuário ou um controle do host.
+Apply the approval handling in processar-pendente when optional telemetry blocks analysis.
+Continue permitted stages and remaining items unless the host declares a wider restriction.
 
 Renove a lease antes do vencimento. Preserve a página e o cursor atuais durante a renovação.
 Se o host anunciar um limite real, grave o estado e finalize a lease com o resultado correto.

@@ -15,6 +15,9 @@ Preserve a fala original, a tradução integral para português, a inspeção vi
 Se a análise falhar, preserve o resultado parcial e continue as etapas disponíveis.
 Respeite os cooldowns de cada serviço, as rejeições de aprovação e os cancelamentos.
 Não contorne bloqueios de login, limites do Instagram ou controles do host.
+Keep optional telemetry disabled. Use explicit owner consent through the normal approval process only when telemetry remains unavoidable.
+If approval remains rejected, suspend that action and continue permitted stages and items, unless the host declares a wider restriction.
+Save partial results. Do not retry the rejected action for each item.
 Retome os itens restantes na próxima ocorrência autorizada. Não crie tarefas extras.
 Informe run_id, started_at, finish_run e pendências quando houver avanço, falha ou ação necessária.
 Não envie uma notificação quando nada mudar e nenhuma ação for necessária.
