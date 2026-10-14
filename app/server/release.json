@@ -1,5 +1,5 @@
 {
   "schema_version": 1,
-  "version": "1.7.3",
-  "summary": "Pendentes usam os dados salvos antes de buscar mídia. Login orientado pelo aplicativo do ChatGPT no celular e avisos de novas versões."
+  "version": "1.7.4",
+  "summary": "Preenche criadores ausentes com metadados verificados. Captura links na lista de Salvos e processa URLs sem abrir cada Reel."
 }

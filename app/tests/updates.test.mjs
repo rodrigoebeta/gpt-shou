@@ -12,8 +12,8 @@ test("release comparison uses numeric stable versions and rejects malformed valu
   const {newerRelease,releaseVersion} = await fresh();
   assert.equal(newerRelease("1.10.0","1.9.9"),true);
   assert.equal(newerRelease("2.0.0","1.99.99"),true);
-  assert.equal(newerRelease("1.7.3","1.7.3"),false);
-  assert.equal(newerRelease("1.7.2","1.7.3"),false);
+  assert.equal(newerRelease("1.7.4","1.7.4"),false);
+  assert.equal(newerRelease("1.7.2","1.7.4"),false);
   for(const value of [null,"01.2.3","1.2","1.2.3-beta","1.2.3\n","1.2.999999",{}]) assert.throws(()=>releaseVersion(value));
 });
 
@@ -33,7 +33,7 @@ test("release checks share a cache and send no installation information", async 
   const results=await Promise.all([checkUpdates(),checkUpdates()]);
   assert.equal(requests,1);
   assert.equal(results[0].status,"available");
-  assert.equal(results[0].installed_version,"1.7.3");
+  assert.equal(results[0].installed_version,"1.7.4");
   assert.deepEqual(results[0],results[1]);
   await checkUpdates();assert.equal(requests,1);
   now+=15*60*1000+1;
@@ -63,7 +63,7 @@ test("invalid feeds and failed requests remain unavailable without breaking the 
 });
 
 test("equal and older releases never offer a downgrade", async t => {
-  for(const version of ["1.7.3","1.7.2"]){
+  for(const version of ["1.7.4","1.7.2"]){
     const mock=t.mock.method(globalThis,"fetch",async()=>Response.json({...release,version}));
     const {checkUpdates}=await fresh();assert.equal((await checkUpdates()).status,"current");
     mock.mock.restore();

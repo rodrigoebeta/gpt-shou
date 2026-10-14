@@ -18,6 +18,12 @@ Se faltar transcrição ou inspeção visual, obtenha o vídeo temporário com a
 Reutilize as modalidades já verificadas. Não repita uma transcrição válida para completar apenas a inspeção visual.
 O banco não armazena o vídeo permanente. Uma URL catalogada não garante que a mídia ainda esteja acessível.
 Não abra o Reel no navegador antes do auxiliar como verificação automática.
+O fluxo normal de pendentes não abre abas.
+Se faltar somente o criador, use node acquire.mjs --metadata <source_url>, sem baixar mídia ou preparar dependências.
+Se source.creator estiver vazio e o auxiliar retornar creator, grave esse valor com register_sources antes da análise.
+Copie source de get_reference e os collection_ids existentes, até 100 por chamada. Altere somente creator.
+Use a revisão devolvida nas próximas gravações. Releia source.creator para confirmar o preenchimento.
+Preserve um criador já preenchido. Não use menções da legenda como autoria.
 Abra uma aba somente para obter informação necessária que falte ou investigar um erro concreto que o navegador possa esclarecer.
 Se o auxiliar retornar LOGIN_REQUIRED ou ACCESS_RESTRICTED, registre a pendência e continue nos itens permitidos.
 O login no navegador não autentica o auxiliar anônimo. Não repita esse login a cada item.

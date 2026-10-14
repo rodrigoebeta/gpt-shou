@@ -1,8 +1,26 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {sourceIdentity,mediaUrl,acquireProduct,inspectResponse,createItemWorkspace,cleanupItem} from '../runtime/acquire.mjs';
+import {sourceIdentity,mediaUrl,acquireProduct,inspectResponse,createItemWorkspace,cleanupItem,pageCreator,metadataOnly} from '../runtime/acquire.mjs';
 import {mkdir,mkdtemp,writeFile,readFile,readdir,rm,symlink,realpath} from 'node:fs/promises';
 import {resolve,join,dirname} from 'node:path';
+
+test('metadata-only acquisition verifies owner and source without media or browser requests',async()=>{
+  const url='https://www.instagram.com/reel/AbC123/';
+  const html='<meta content="https://www.instagram.com/verified.author/reel/AbC123/" property="og:url"><meta name="twitter:title" content="Name (&#064;verified.author) &#x2022; Instagram reel">';
+  let calls=0;
+  const result=await metadataOnly(url,async actual=>{calls++;assert.equal(actual,url);return new Response(html);});
+  assert.equal(calls,1);assert.equal(result.creator,'verified.author');assert.equal(result.source_key,'AbC123');
+  assert.equal(result.video,undefined);assert.equal(result.item_directory,undefined);
+  const source=sourceIdentity(url);
+  assert.equal(pageCreator(source,html.replace('Name (&#064;verified.author)','&#064;verified.author')),'verified.author');
+  assert.throws(()=>pageCreator(source,html.replace('/AbC123/','/Other/')),{code:'SOURCE_IDENTITY_UNVERIFIED'});
+  assert.throws(()=>pageCreator(source,html.replace('www.instagram.com','example.test')),{code:'SOURCE_IDENTITY_UNVERIFIED'});
+  assert.throws(()=>pageCreator(source,html.replace('&#064;verified.author','&#064;mentioned.author')),{code:'CREATOR_UNAVAILABLE'});
+  assert.throws(()=>pageCreator(source,'<meta property="og:description" content="Thanks @mentioned.author">'),{code:'SOURCE_IDENTITY_UNVERIFIED'});
+  await assert.rejects(()=>metadataOnly(url,async()=>new Response('',{status:429,headers:{'retry-after':'60'}})),{code:'RATE_LIMITED'});
+  await assert.rejects(()=>metadataOnly(url,async()=>new Response('',{status:403})),{code:'ACCESS_RESTRICTED'});
+  await assert.rejects(()=>metadataOnly(url,async()=>new Response('x'.repeat(2_000_001))),{code:'METADATA_TOO_LARGE'});
+});
 
 async function fixture(t) {
   const cache = resolve('.cache');

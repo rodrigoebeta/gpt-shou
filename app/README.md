@@ -2,7 +2,7 @@
 
 ## Cloud runtime
 
-The authenticated get_runtime tool supplies cloud runtime 1.7.3 and its workflow through the Site's native plugin.
+The authenticated get_runtime tool supplies cloud runtime 1.7.4 and its workflow through the Site's native plugin.
 The manifest includes a compressed archive and an offline Python materializer with independent SHA256 checks.
 Materialize the exact six files before the bootstrap. Never regenerate package-lock.json or fetch source from the private Site through the shell.
 The cloud task retrieves and verifies its source files on each run. It requires no task attachment or local files.

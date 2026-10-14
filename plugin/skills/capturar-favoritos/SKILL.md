@@ -6,7 +6,7 @@ description: Captura os Reels salvos do Instagram para o ShouBox, um por vez, co
 # Capturar favoritos
 
 Execute somente no Work pelo aplicativo do ChatGPT no seu celular e na instalação escolhida pela pessoa.
-Leia get_runtime com file=workflow.txt. Exija runtime 1.7.3 ou uma versão compatível posterior.
+Leia get_runtime com file=workflow.txt. Exija runtime 1.7.4 ou uma versão compatível posterior.
 Adquira start_run com mode=acquire e pending_cursor=null.
 Use trigger=scheduled somente quando o host identificar uma ocorrência agendada.
 Use trigger=manual para uma mensagem da pessoa ou um teste manual.
@@ -23,6 +23,9 @@ Obedeça um limite menor quando a pessoa solicitar uma amostra.
 Informe progresso breve durante a execução, sem encerrar a captura para apresentar esse progresso.
 
 Use sync_collections, get_discovery e record_discovery_page para a descoberta.
+Use uma única aba de descoberta no fluxo normal. Leia os hiperlinks dos cartões já carregados nos Salvos.
+Não abra cada Reel para copiar sua URL. Grave as identidades e processe as URLs por código.
+Use creator=null quando o cartão não mostrar o autor. Complete-o com metadados verificados durante o processamento.
 Confirme cada página e sua âncora no Site antes de obter a mídia.
 Faça a verificação dos novos Salvos sem perder a âncora das listas antigas.
 Depois de cada página descoberta, processe os novos pendentes elegíveis antes de descobrir outra página.

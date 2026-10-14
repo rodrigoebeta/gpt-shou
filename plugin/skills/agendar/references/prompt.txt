@@ -1,7 +1,9 @@
 Capture meus Reels salvos do Instagram para o ShouBox em SITE_URL.
 Execute novamente em cada ocorrência, somente no Work pelo aplicativo do ChatGPT no seu celular.
 Use a skill capturar-favoritos deste plugin e o workflow.txt atual retornado por get_runtime.
-Use runtime 1.7.3 ou uma versão compatível posterior, contrato 1.0.0 e pacote da API 0.1.0.
+Leia os hiperlinks dos Salvos em uma aba de descoberta, sem abrir cada Reel para copiar a URL.
+Processe as URLs por código. Grave o criador verificado quando esse campo ainda estiver vazio.
+Use runtime 1.7.4 ou uma versão compatível posterior, contrato 1.0.0 e pacote da API 0.1.0.
 Use trigger=scheduled nesta ocorrência automática.
 Confirme o acesso aos Salvos somente depois de processar os pendentes, ao começar a descoberta.
 Preserve o escopo, a importação inicial, as edições manuais e as referências removidas.

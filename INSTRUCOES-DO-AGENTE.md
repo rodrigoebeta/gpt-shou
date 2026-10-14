@@ -2,7 +2,7 @@
 
 ## Versões e capacidades
 
-Use aplicativo 0.1.0, contrato 1.0.0, conteúdo 1.2.0 e runtime cloud 1.7.3.
+Use aplicativo 0.1.0, contrato 1.0.0, conteúdo 1.2.0 e runtime cloud 1.7.4.
 Leia VERSION.json e verifique FILES.sha256 antes de executar o pacote.
 Esta versão exige validação completa na conta de destino antes da ativação automática.
 Não apresente como validada uma capacidade comprovada somente em outra conta ou em uma execução local.
@@ -204,7 +204,7 @@ Consulte a documentação oficial: https://learn.chatgpt.com/docs/automations.
 
 Mantenha aplicativo, runtime, contrato, onboarding e prompt compatíveis.
 Repita a verificação do catálogo após cada mudança nas ferramentas MCP.
-Atualize os prompts existentes para runtime 1.7.3 e conteúdo 1.2.0 antes de novas gravações.
+Atualize os prompts existentes para runtime 1.7.4 e conteúdo 1.2.0 antes de novas gravações.
 O Site mantém a leitura de conteúdo 1.0.0 e 1.1.0, mas exige 1.2.0 nas novas gravações de content.
 Uma alteração do template não atualiza uma tarefa já instalada.
 Leia a configuração da tarefa existente e atualize seu prompt dentro do escopo autorizado pela pessoa.
@@ -254,3 +254,10 @@ O Site não inicia uma conversa nem publica código por conta própria.
 Instalações anteriores precisam receber esta atualização uma vez para passar a mostrar os próximos avisos.
 Publique app/server/release.json e VERSION.json com uma versão maior quando a atualização estiver pronta.
 Não altere a versão para cada commit. Atualize FILES.sha256 junto com a publicação.
+
+## Criadores e links salvos
+
+Leia os hiperlinks dos cartões em uma aba de Salvos. Não abra cada Reel para copiar sua URL.
+Processe as URLs registradas por código. Abra uma aba do item somente por uma necessidade concreta.
+Se o criador não aparecer na lista, use null. Grave o autor verificado retornado pelo auxiliar com register_sources.
+Preserve um criador existente. Use a revisão devolvida antes da próxima gravação e confira source.creator com get_reference.

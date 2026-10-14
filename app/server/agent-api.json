@@ -767,7 +767,7 @@
           },
           "runtime_version": {
             "type": "string",
-            "const": "1.7.3"
+            "const": "1.7.4"
           },
           "manifest": {
             "type": "object",
@@ -782,7 +782,7 @@
             "properties": {
               "runtime_version": {
                 "type": "string",
-                "const": "1.7.3"
+                "const": "1.7.4"
               },
               "execution": {
                 "type": "string",
@@ -998,7 +998,7 @@
     },
     {
       "name": "register_sources",
-      "description": "Register source identities without reviving removed references or replacing content.",
+      "description": "Register source identities and fill a missing creator from verified source metadata. Preserve existing creators, content, manual edits, and removed references.",
       "annotations": {
         "readOnlyHint": false,
         "destructiveHint": false,
@@ -2490,7 +2490,7 @@
     },
     {
       "name": "get_reference",
-      "description": "Read the owner's persisted reference receipt; internal content requires explicit selection.",
+      "description": "Read persisted source metadata and the owner reference receipt; internal content requires explicit selection.",
       "annotations": {
         "readOnlyHint": true,
         "destructiveHint": false,
@@ -3275,6 +3275,73 @@
             },
             "maxItems": 500,
             "uniqueItems": true
+          },
+          "source": {
+            "type": "object",
+            "properties": {
+              "source_key": {
+                "type": "string",
+                "maxLength": 64,
+                "minLength": 1,
+                "pattern": "^[A-Za-z0-9_-]+$"
+              },
+              "source_url": {
+                "type": "string",
+                "maxLength": 160,
+                "pattern": "^https://www\\.instagram\\.com/reel/[A-Za-z0-9_-]+/$"
+              },
+              "creator": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 100
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "discovered_at": {
+                "type": "string",
+                "maxLength": 30,
+                "format": "date-time",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$"
+              },
+              "saved_at": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 30,
+                    "format": "date-time",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "save_order": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 2147483647
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "source_key",
+              "source_url",
+              "creator",
+              "discovered_at",
+              "saved_at",
+              "save_order"
+            ],
+            "additionalProperties": false
           }
         },
         "required": [
@@ -3285,7 +3352,8 @@
           "classification",
           "failure",
           "content",
-          "collection_ids"
+          "collection_ids",
+          "source"
         ],
         "additionalProperties": false
       },

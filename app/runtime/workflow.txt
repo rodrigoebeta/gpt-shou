@@ -1,4 +1,4 @@
-ShouBox cloud runtime 1.7.3
+ShouBox cloud runtime 1.7.4
 
 Start the task through Work in the ChatGPT mobile app.
 Use the ChatGPT mobile app for Instagram authentication.
@@ -62,7 +62,11 @@ Open an item tab only for necessary missing information or a concrete error that
 An unavailable browser does not block stored-content enrichment or anonymous acquisition.
 After draining pending work, verify Saved access for discovery.
 Use the authenticated remote browser to discover the owner's Saved Reels and selected collections.
-Track browser tab IDs before browser work. Use at most one discovery tab and one temporary item tab.
+Use one discovery tab as the normal browser workflow. Pending processing normally needs no browser tab.
+Read the destination hyperlinks from rendered Saved cards. Do not open each item merely to obtain its URL.
+Store observed Reel identities and the page checkpoint before processing those URLs programmatically.
+Use creator=null when the list does not expose the source owner. Never infer an owner from caption mentions.
+Track browser tab IDs before browser work. Allow one temporary item tab only for a concrete missing-information exception.
 Keep one discovery tab on Saved or the current collection, with its pagination and scroll position intact.
 When browser inspection is necessary, open a separate temporary item tab. Never navigate the discovery tab to an item.
 Do not process items in parallel or open tabs for later items.
@@ -134,7 +138,17 @@ Continue stored-content enrichment and otherwise permitted processing of known U
 Do not export browser credentials into tool results or logs.
 
 Run node acquire.mjs <source_url> in the cloud runtime directory.
+When only creator is missing, run node acquire.mjs --metadata <source_url> instead. It uses one bounded public HTML request.
+This mode verifies the source identity and owner metadata. It downloads no media and requires no browser or acquisition dependencies.
+If metadata is unavailable, preserve null and continue permitted work. Do not guess the owner or retry every item after a service limit.
 The helper returns the actual caption, temporary video and cover paths, and technical stream metadata.
+It also returns creator from the verified source owner.
+When get_reference.source.creator is missing and the helper returns a creator, persist it immediately through register_sources.
+Copy get_reference.source and its collection_ids into the source record, replacing only creator with the verified value.
+Use at most 100 existing collection_ids per registration. Existing memberships remain intact.
+Use a new request_id. Read the returned revision before store_cover or update_reference.
+Read get_reference again and confirm source.creator. Preserve an existing nonempty creator.
+Do not mark an analysis attempt or change content merely to repair the creator.
 Use its item_directory for all item artifacts, including frames, contact sheets, derived audio, and intermediate JSON.
 Keep shared dependencies and the speech model outside item_directory for reuse during this run.
 The helper rejects another acquisition with ITEM_CLEANUP_REQUIRED while the work directory contains an earlier item.

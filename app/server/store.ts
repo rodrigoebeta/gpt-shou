@@ -223,10 +223,12 @@ async function register(owner: string, row: any, args: any, paginated=false) {
     const existing = await one('SELECT * FROM "references" WHERE source_key=? AND owner_id=?',[source.source_key,owner]);
     if (existing) {
       const collections=[...new Set([...JSON.parse(existing.collections),...source.collection_ids])];
-      if(!existing.removed && collections.length!==JSON.parse(existing.collections).length){
+      const creator=existing.creator?.trim() ? existing.creator : source.creator?.trim() || null;
+      if(!existing.removed && (collections.length!==JSON.parse(existing.collections).length || creator!==existing.creator)){
         if(collections.length>500)throw new AppError("INVALID_ARGUMENT","Collection membership limit reached.");
         guards.push('EXISTS(SELECT 1 FROM "references" WHERE id=? AND revision=? AND removed=0)');guardArgs.push(existing.id,existing.revision);
-        writes.push(statement('UPDATE "references" SET collections=?,revision=revision+1,updated_at=? WHERE id=?',[JSON.stringify(collections),now(),existing.id]));existing.revision++;
+        const indexed=searchText({...existing,creator},existing.analysis?JSON.parse(existing.analysis):null,JSON.parse(existing.classification),JSON.parse(row.taxonomy));
+        writes.push(statement('UPDATE "references" SET collections=?,creator=?,search_text=?,revision=revision+1,updated_at=? WHERE id=?',[JSON.stringify(collections),creator,indexed,now(),existing.id]));existing.revision++;
       }
       items.push({source_key:source.source_key,disposition:existing.removed?"removed":"existing",reference:receipt(existing)});continue;
     }
@@ -356,7 +358,7 @@ export async function callTool(name: string, args: any, headers: Headers) {
   if (name === "get_reference") {
     const row = await reference(args.reference_id,identity.id);
     const data = args.include_content && row.analysis?JSON.parse(row.analysis):null;
-    return success({reference:receipt(row),collection_ids:JSON.parse(row.collections),analysis:data?.content_version?null:data,content:data?.content_version?data:null,
+    return success({reference:receipt(row),source:{source_key:row.source_key,source_url:row.source_url,creator:row.creator,discovered_at:row.discovered_at,saved_at:row.saved_at,save_order:row.save_order},collection_ids:JSON.parse(row.collections),analysis:data?.content_version?null:data,content:data?.content_version?data:null,
       classification:args.include_content?effectiveClassification(row,null,identity.row):null,
       failure:row.failure?JSON.parse(row.failure):null});
   }

@@ -80,3 +80,5 @@ O ChatGPT atualiza o Site e as skills, preservando seus dados e suas configuraç
 O aviso aparece após a verificação periódica; não é uma notificação do celular.
 Instalações anteriores à versão 1.7.3 precisam receber esta atualização uma vez para habilitar os avisos.
 Para essa primeira atualização, envie: "Atualize meu ShouBox pelo pacote oficial https://github.com/rodrigoebeta/gpt-shoubox. Preserve meu Site e meus dados."
+
+A versão 1.7.4 preenche criadores ausentes após obter metadados verificados. O fluxo normal lê links em uma aba de Salvos e processa as URLs por código.

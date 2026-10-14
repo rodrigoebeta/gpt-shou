@@ -39,5 +39,5 @@ Valide o método de captura com o teste manual. Confirme a tarefa salva se a pes
 Não exija aguardar uma ocorrência pelo horário para concluir essa validação.
 Se faltar uma ferramenta necessária, indique seu nome e preserve a instalação existente.
 
-O runtime mínimo destas skills é 1.7.3. O contrato é 1.0.0; o pacote da API é 0.1.0.
+O runtime mínimo destas skills é 1.7.4. O contrato é 1.0.0; o pacote da API é 0.1.0.
 

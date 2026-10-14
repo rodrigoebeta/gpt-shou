@@ -46,6 +46,35 @@ export function inspectResponse(response) {
   if (/<title>\s*(Just a moment|Access Denied|Verify you are human)/i.test(response.text ?? '')) throw new AcquisitionError('ACCESS_RESTRICTED');
   return response;
 }
+export function pageCreator(source, html) {
+  const decode=value=>value.replace(/&(#x[0-9a-f]+|#\d+|amp|quot|apos|lt|gt);/gi,(_,entity)=>entity[0]==='#'?String.fromCodePoint(Math.min(0x10ffff,parseInt(entity.slice(entity[1].toLowerCase()==='x'?2:1),entity[1].toLowerCase()==='x'?16:10))):({amp:'&',quot:'"',apos:"'",lt:'<',gt:'>'}[entity.toLowerCase()]));
+  const meta=new Map();
+  for(const tag of html.matchAll(/<meta\b[^>]*>/gi)){
+    const attrs=Object.fromEntries([...tag[0].matchAll(/([\w:-]+)\s*=\s*(["'])(.*?)\2/gs)].map(m=>[m[1].toLowerCase(),decode(m[3])]));
+    const name=attrs.property??attrs.name;
+    if(name && attrs.content)meta.set(name,attrs.content);
+  }
+  let canonical;
+  try{canonical=new URL(meta.get('og:url'));}catch{throw new AcquisitionError('SOURCE_IDENTITY_UNVERIFIED');}
+  const match=/^\/([A-Za-z0-9._]{1,30})\/(?:reel|p)\/([A-Za-z0-9_-]+)\/?$/.exec(canonical.pathname);
+  if(canonical.origin!==base || !match || match[2]!==source.source_key)throw new AcquisitionError('SOURCE_IDENTITY_UNVERIFIED');
+  const title=meta.get('twitter:title')??'';
+  const titleOwner=/\(@([A-Za-z0-9._]{1,30})\)/.exec(title)?.[1] ?? /^@([A-Za-z0-9._]{1,30})\s/.exec(title)?.[1];
+  if(titleOwner?.toLowerCase()!==match[1].toLowerCase())throw new AcquisitionError('CREATOR_UNAVAILABLE');
+  return match[1];
+}
+export async function metadataOnly(value, fetcher=fetch) {
+  const source=sourceIdentity(value);
+  const response=await fetcher(source.source_url,{redirect:'manual',signal:AbortSignal.timeout(30000)});
+  inspectResponse({status:response.status,url:source.source_url,headers:response.headers});
+  if(!response.body)throw new AcquisitionError('SOURCE_UNAVAILABLE');
+  const reader=response.body.getReader(),chunks=[];let size=0;
+  try{for(;;){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>2_000_000)throw new AcquisitionError('METADATA_TOO_LARGE');chunks.push(value);}}
+  finally{await reader.cancel();}
+  const text=Buffer.concat(chunks).toString('utf8');
+  inspectResponse({status:response.status,url:source.source_url,text});
+  return {ok:true,source_key:source.source_key,source_url:source.source_url,creator:pageCreator(source,text),acquired_at:new Date().toISOString()};
+}
 export async function acquireProduct(value, session) {
   const source = sourceIdentity(value);
   const headers = {'X-IG-App-ID':'936619743392459','X-ASBD-ID':'359341','X-IG-WWW-Claim':'0',Origin:base,Accept:'*/*'};
@@ -139,7 +168,7 @@ export async function main(value) {
     const coverUrl = (candidates.find(item=>item.width<=640)||candidates.at(-1))?.url;
     const cover = coverUrl ? await download(session,coverUrl,join(directory,'cover'),1_048_576) : null;
     const caption = product.caption===null ? '' : typeof product.caption?.text==='string' ? product.caption.text : null;
-    const result = {ok:true,runtime_version:'1.7.3',item_directory:directory,source_key:source.source_key,source_url:source.source_url,creator:product.user?.username??null,caption,acquired_at:new Date().toISOString(),video:media,cover,streams,native_version:curl_version()};
+    const result = {ok:true,runtime_version:'1.7.4',item_directory:directory,source_key:source.source_key,source_url:source.source_url,creator:product.user?.username??null,caption,acquired_at:new Date().toISOString(),video:media,cover,streams,native_version:curl_version()};
     await writeFile(join(directory,'source.json'),JSON.stringify(result,null,2),{mode:0o600});
     return result;
   } catch (error) {
@@ -148,6 +177,6 @@ export async function main(value) {
   } finally { await session?.close(); }
 }
 if (process.argv[1] && resolve(process.argv[1])===fileURLToPath(import.meta.url)) {
-  try { console.log(JSON.stringify(await (process.argv[2]==='--cleanup' ? cleanupItem(process.argv[3]) : main(process.argv[2])))); }
+  try { console.log(JSON.stringify(await (process.argv[2]==='--cleanup' ? cleanupItem(process.argv[3]) : process.argv[2]==='--metadata' ? metadataOnly(process.argv[3]) : main(process.argv[2])))); }
   catch (error) { console.log(JSON.stringify({ok:false,error:{code:error instanceof AcquisitionError?error.code:'ACQUISITION_FAILED',retry_at:error instanceof AcquisitionError?error.retryAt:null}})); process.exitCode=2; }
 }

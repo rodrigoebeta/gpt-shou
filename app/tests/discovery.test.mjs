@@ -24,7 +24,7 @@ const browserBundle=await build({entryPoints:[fileURLToPath(new URL('../server/b
   b.onResolve({filter:/^\.\/cover$/},()=>({path:'cover',namespace:'fixture'}));
   b.onLoad({filter:/.*/,namespace:'fixture'},a=>({contents:a.path==='env'?'export const env=globalThis.__discoveryEnv':'export function inspectCover(){throw Error("No media") }'}));
 }}]});
-const {search,changeSettings}=await import(`data:text/javascript;base64,${Buffer.from(browserBundle.outputFiles[0].text).toString('base64')}`);
+const {search,changeSettings,facets}=await import(`data:text/javascript;base64,${Buffer.from(browserBundle.outputFiles[0].text).toString('base64')}`);
 const headers=new Headers({'oai-authenticated-user-id':'fixture_owner','oai-authenticated-user-email':'fixture@example.test'});
 let lease,tax;
 const base=()=>({contract_version:'1.0.0',request_id:crypto.randomUUID(),run_id:lease.run_id,lease_epoch:lease.lease_epoch});
@@ -34,6 +34,50 @@ const source=(key,collections=[])=>({source_key:key,source_url:`https://www.inst
 const page=(collection,revision,after,last,end=false)=>({collection_id:collection,expected_revision:revision,after_source_key:after,last_source_key:last,end_reached:end,restart:false});
 const read=id=>call('get_discovery',{collection_id:id});
 const finish=()=>call('finish_run',{...base(),outcome:'interrupted',cursor:lease.cursor,cooldowns:[]});
+
+test('late creator metadata survives replay and updates search without changing stored work',async()=>{
+  resetInstallation();await acquire();
+  const original={...source('LATE_CREATOR'),creator:null};
+  const added=await call('register_sources',{...base(),sources:[original]});
+  const id=added.items[0].reference.reference_id;
+  db.prepare('UPDATE "references" SET analysis=?,outcome=?,manual_categories=1,manual_topics=1,result_sha=?,cover_key=?,last_attempt_at=?,last_attempt_run_id=? WHERE id=?').run('{"content_version":"1.2.0","caption":"preserved evidence"}','partial','a'.repeat(64),'existing-cover','2026-10-13T00:00:00Z','old-run',id);
+  const before=db.prepare('SELECT * FROM "references" WHERE id=?').get(id);
+  const args={...base(),sources:[{...original,creator:'verified.author'}]};
+  const updated=await call('register_sources',args);
+  assert.deepEqual(await call('register_sources',args),updated);
+  const after=db.prepare('SELECT * FROM "references" WHERE id=?').get(id);
+  assert.equal(after.creator,'verified.author');assert.equal(after.revision,before.revision+1);
+  for(const key of Object.keys(before).filter(k=>!['creator','search_text','revision','updated_at'].includes(k)))assert.deepEqual(after[key],before[key],key);
+  const readback=await call('get_reference',{reference_id:id,include_content:false});
+  const {collection_ids,...metadata}=original;
+  assert.deepEqual(readback.source,{...metadata,creator:'verified.author'});
+  const creators=(await facets(new URL('https://site.test/api/facets?type=creator&query=verified'),headers)).items;
+  assert.equal(creators.length,1);assert.equal(creators[0].id,'verified.author');assert.equal(creators[0].label,'verified.author');
+  const query={query:'verified.author',filters:{category:[],topic:[],creator:[],collection:[]},order:'recent',removed:false,cursor:null};
+  assert.equal((await search(query,headers)).items[0].id,id);
+  assert.equal((await search({...query,query:'preserved evidence',filters:{...query.filters,creator:['verified.author']}},headers)).items[0].id,id);
+  for(const creator of [null,'','wrong.author'])await call('register_sources',{...base(),sources:[{...original,creator}]});
+  assert.deepEqual(db.prepare('SELECT * FROM "references" WHERE id=?').get(id),after);
+  await finish();resetInstallation();
+});
+
+test('discovery backfills creators atomically and preserves removed references',async()=>{
+  resetInstallation();await acquire();
+  const original={...source('DISCOVERY_CREATOR'),creator:null};
+  await call('register_sources',{...base(),sources:[original]});
+  const args={...base(),page:page(null,0,null,original.source_key,true),sources:[{...original,creator:'verified.author'}]};
+  failBatch=true;
+  await assert.rejects(()=>call('record_discovery_page',args),{code:'REVISION_CONFLICT'});
+  assert.equal(db.prepare('SELECT creator FROM "references"').get().creator,null);
+  assert.equal((await read(null)).discovery.revision,0);
+  await call('record_discovery_page',args);
+  assert.equal(db.prepare('SELECT creator FROM "references"').get().creator,'verified.author');
+  db.exec('UPDATE "references" SET removed=1,creator=NULL');
+  const before=db.prepare('SELECT * FROM "references"').get();
+  await call('register_sources',{...base(),sources:args.sources});
+  assert.deepEqual(db.prepare('SELECT * FROM "references"').get(),before);
+  await finish();resetInstallation();
+});
 
 test('pending traversal covers 123 items and survives a lost finish with partial failures',async()=>{
   resetInstallation();await acquire();
