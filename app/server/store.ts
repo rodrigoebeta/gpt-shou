@@ -98,7 +98,7 @@ async function start(owner: string, row: any, args: any) {
   if (args.mode === "renew") checkLease(row,args);
   if (args.mode === "acquire" && row?.run_id && row.lease_expires > now()) throw new AppError("RUN_BUSY", "Another run is active.", row.lease_expires);
   const cooldowns = row ? JSON.parse(row.cooldowns) : [];
-  const blocked = cooldowns.filter((c: any) => ["instagram","analysis","site"].includes(c.service) && c.next_allowed_at > now());
+  const blocked = cooldowns.filter((c: any) => ["instagram","site"].includes(c.service) && c.next_allowed_at > now());
   if (args.mode === "acquire" && blocked.length) throw new AppError("RATE_LIMITED", "A service cooldown remains active.", blocked.map((c:any)=>c.next_allowed_at).sort().at(-1));
   const runId = args.mode === "acquire" ? crypto.randomUUID() : row.run_id;
   const epoch = args.mode === "acquire" ? (row?.lease_epoch ?? 0) + 1 : row.lease_epoch;
@@ -106,22 +106,31 @@ async function start(owner: string, row: any, args: any) {
   const taxonomy = {categories: categoryLabels.map(label => ({id:crypto.randomUUID(),label})),topics:[],collections:[]};
   const initial = {package_version:VERSION,analysis_version:"1.0.0",scope:{mode:"all_saved",collection_ids:[]},initial_import:"existing",time_zone:"America/Sao_Paulo",daily_times:["09:00","18:00"]};
   let snapshot = row ?? {settings:JSON.stringify(initial),taxonomy:JSON.stringify(taxonomy),taxonomy_revision:1,cursor:'{"new_saves":null,"initial_import":null}',cooldowns:"[]",reclassification:null};
-  let afterId = "", afterTime="9999-12-31T23:59:59Z";
+  let afterId = "", afterTime="", afterSaved="9999-12-31T23:59:59Z";
   if (args.pending_cursor) {
     let cursor:any;
     try{cursor=JSON.parse(atob(args.pending_cursor));}catch{throw new AppError("INVALID_ARGUMENT","Invalid pending cursor.");}
-    if(cursor.run!==runId || cursor.epoch!==epoch || typeof cursor.time!=="string" || !/^[0-9a-f-]{36}$/.test(cursor.id))throw new AppError("INVALID_ARGUMENT","Invalid pending cursor.");
-    afterId=cursor.id;afterTime=cursor.time;
+    if(cursor.run!==runId || cursor.epoch!==epoch || typeof cursor.time!=="string" || typeof cursor.saved!=="string" || !/^[0-9a-f-]{36}$/.test(cursor.id))throw new AppError("INVALID_ARGUMENT","Invalid pending cursor.");
+    afterId=cursor.id;afterTime=cursor.time;afterSaved=cursor.saved;
   }
   const consent = snapshot.reclassification ? JSON.parse(snapshot.reclassification) : null;
-  const pendingRows = await all('SELECT * FROM "references" WHERE owner_id=? AND removed=0 AND (outcome<>\'complete\' OR (? IS NOT NULL AND id IN (SELECT value FROM json_each(?)))) AND (coalesce(saved_at,discovered_at)<? OR (coalesce(saved_at,discovered_at)=? AND id>?)) ORDER BY coalesce(saved_at,discovered_at) DESC,id LIMIT 51', [owner,consent?.id??null,JSON.stringify(consent?.reference_ids??[]),afterTime,afterTime,afterId]);
-  const result = success({run_id:runId,lease_epoch:epoch,lease_expires_at:expiry,settings:settings(snapshot),cursor:JSON.parse(snapshot.cursor),cooldowns,
-    baseline:await baseline(owner,snapshot),pending:pendingRows.slice(0,50).map(receipt),next_pending_cursor:pendingRows.length>50 ? btoa(JSON.stringify({run:runId,epoch,time:pendingRows[49].saved_at??pendingRows[49].discovered_at,id:pendingRows[49].id})) : null});
+  // Persisted attempts prevent a failing first page from starving the rest after a restart.
+  const pendingRows = await all(`SELECT * FROM "references" WHERE owner_id=? AND removed=0
+    AND (outcome NOT IN ('complete','unavailable') OR (? IS NOT NULL AND id IN (SELECT value FROM json_each(?))))
+    AND (last_attempt_run_id IS NULL OR last_attempt_run_id<>?)
+    AND (failure IS NULL OR json_extract(failure,'$.retry_at') IS NULL OR json_extract(failure,'$.retry_at')<=?)
+    AND (coalesce(last_attempt_at,'')>? OR (coalesce(last_attempt_at,'')=? AND
+      (coalesce(saved_at,discovered_at)<? OR (coalesce(saved_at,discovered_at)=? AND id>?))))
+    ORDER BY coalesce(last_attempt_at,''),coalesce(saved_at,discovered_at) DESC,id LIMIT 51`,
+    [owner,consent?.id??null,JSON.stringify(consent?.reference_ids??[]),runId,now(),afterTime,afterTime,afterSaved,afterSaved,afterId]);
+  const startedAt = args.mode === "acquire" ? now() : (await one("SELECT started_at FROM runs WHERE id=?",[runId])).started_at;
+  const result = success({run_id:runId,started_at:startedAt,lease_epoch:epoch,lease_expires_at:expiry,settings:settings(snapshot),cursor:JSON.parse(snapshot.cursor),cooldowns,
+    baseline:await baseline(owner,snapshot),pending:pendingRows.slice(0,50).map(receipt),next_pending_cursor:pendingRows.length>50 ? btoa(JSON.stringify({run:runId,epoch,time:pendingRows[49].last_attempt_at??'',saved:pendingRows[49].saved_at??pendingRows[49].discovered_at,id:pendingRows[49].id})) : null});
   const before = row ? [] : [statement("INSERT INTO installations(id,owner_id,settings,taxonomy) VALUES(1,?,?,?) ON CONFLICT(id) DO NOTHING",[owner,JSON.stringify(initial),JSON.stringify(taxonomy)])];
   const guard = args.mode === "acquire" ? "EXISTS(SELECT 1 FROM installations WHERE id=1 AND owner_id=? AND lease_epoch=? AND (run_id IS NULL OR lease_expires<=?))" : leaseCondition;
   const guardArgs = args.mode === "acquire" ? [owner,row?.lease_epoch??0,now()] : [owner,runId,epoch,now()];
   const writes = [statement("UPDATE installations SET run_id=?,lease_epoch=?,lease_expires=? WHERE id=1",[runId,epoch,expiry])];
-  if (args.mode === "acquire") writes.push(statement("INSERT INTO runs(id,owner_id,epoch,trigger,started_at) VALUES(?,?,?,?,?)",[runId,owner,epoch,args.trigger,now()]));
+  if (args.mode === "acquire") writes.push(statement("INSERT INTO runs(id,owner_id,epoch,trigger,started_at) VALUES(?,?,?,?,?)",[runId,owner,epoch,args.trigger,startedAt]));
   return commit(owner,"start_run",args,result,writes,guard,guardArgs,before);
 }
 
@@ -304,7 +313,8 @@ async function update(owner: string, installation: any, args: any) {
   const expiry = expires();
   const next = {...row,revision:row.revision+1,analysis:analysis?JSON.stringify(analysis):null,outcome:args.outcome,result_sha:resultSha};
   const guard = referenceGuard(owner,row,{...args,taxonomyRevision:installation.taxonomy_revision});
-  const writes = [statement('UPDATE "references" SET analysis=?,classification=?,search_text=?,result_sha=?,outcome=?,failure=?,revision=revision+1,updated_at=? WHERE id=?',[next.analysis,JSON.stringify(classification),indexed,resultSha,args.outcome,args.failure?JSON.stringify(args.failure):null,now(),row.id]),renew(expiry)];
+  const attemptedAt=now();
+  const writes = [statement('UPDATE "references" SET analysis=?,classification=?,search_text=?,result_sha=?,outcome=?,failure=?,revision=revision+1,updated_at=?,last_attempt_at=?,last_attempt_run_id=? WHERE id=?',[next.analysis,JSON.stringify(classification),indexed,resultSha,args.outcome,args.failure?JSON.stringify(args.failure):null,attemptedAt,attemptedAt,args.run_id,row.id]),renew(expiry)];
   if (classification.reclassification_consent_id) {
     const consent = JSON.parse(installation.reclassification);
     consent.reference_ids=consent.reference_ids.filter((id:string)=>id!==row.id);

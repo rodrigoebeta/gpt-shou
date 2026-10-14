@@ -139,7 +139,7 @@ export async function main(value) {
     const coverUrl = (candidates.find(item=>item.width<=640)||candidates.at(-1))?.url;
     const cover = coverUrl ? await download(session,coverUrl,join(directory,'cover'),1_048_576) : null;
     const caption = product.caption===null ? '' : typeof product.caption?.text==='string' ? product.caption.text : null;
-    const result = {ok:true,runtime_version:'1.6.0',item_directory:directory,source_key:source.source_key,source_url:source.source_url,creator:product.user?.username??null,caption,acquired_at:new Date().toISOString(),video:media,cover,streams,native_version:curl_version()};
+    const result = {ok:true,runtime_version:'1.7.0',item_directory:directory,source_key:source.source_key,source_url:source.source_url,creator:product.user?.username??null,caption,acquired_at:new Date().toISOString(),video:media,cover,streams,native_version:curl_version()};
     await writeFile(join(directory,'source.json'),JSON.stringify(result,null,2),{mode:0o600});
     return result;
   } catch (error) {

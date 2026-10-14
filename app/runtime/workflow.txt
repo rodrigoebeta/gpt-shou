@@ -1,10 +1,25 @@
-ShouBox cloud runtime 1.6.0
+ShouBox cloud runtime 1.7.0
 
 Run media acquisition and analysis only in ChatGPT Work cloud execution.
 Use this installation's native ShouBox tools and the owner's cloud Instagram session.
 Do not use a local browser, computer, attachment, paid model API, or another installation's credentials.
 
 Acquire a run lease with start_run before processing.
+Use started_at from the lease response as the exact run start time.
+Process every eligible pending page. A page boundary or a few successful items is not a completion condition.
+Keep the current pending page and next_pending_cursor while processing its items.
+Use start_run mode=renew with that cursor after finishing the page.
+Keep the current page during an intermediate lease renewal. Do not restart the queue after each item.
+After the final page, query once with pending_cursor=null for items discovered during processing.
+The backend excludes items already attempted in this run and items with future retry_at values.
+It prioritizes items never attempted, then the oldest attempts. Definitively unavailable items remain stored outside the retry queue.
+Each update_reference records the attempt atomically. This progress survives a missing finish_run and an expired lease.
+Acquire a new lease with pending_cursor=null after interruption. Never reuse the preceding lease's cursor.
+Continue discovery and processing until all selected lists and eligible work finish, unless the owner requests a bounded sample.
+Report progress without ending the run. Do not invent a deadline or item quota.
+Respect actual host limits, user cancellation, approval rejection, authentication loss, and service rate limits.
+Preserve the committed state when a real limit stops execution. Do not claim the library is complete.
+Resume through the next authorized cloud occurrence. Do not promise an automatic restart without a confirmed trigger.
 For text-only enrichment, use verified stored content and the model without preparing media dependencies.
 Prepare the following runtime files only when acquisition or media analysis is required.
 Use get_runtime with file=manifest and use its archive object to materialize the runtime offline.
@@ -18,6 +33,11 @@ Run node bootstrap.mjs in that cloud directory.
 This installs only the pinned technical acquisition dependencies inside the directory.
 It performs no transcription or visual analysis.
 Run python transcribe.py --prepare in the same cloud directory.
+Attempt preparation at most twice for a transient failure.
+If preparation remains unavailable, skip further preparation attempts during this run.
+Continue discovery, acquisition, and available inspection. Save unavailable speech as partial without replacing valid stored speech.
+An analysis cooldown applies only to analysis. It does not prevent discovery or Site writes.
+Do not invoke analysis while its cooldown remains active. Obey Instagram and Site cooldowns before their requests.
 This prepares the pinned speech engine and model inside that temporary directory.
 Require Linux x86_64, Python with venv, FFmpeg, ffprobe, and access to the package and model sources.
 Keep enough lease time for each command and renew the lease before further processing.
@@ -109,6 +129,7 @@ Use the final successful JSON object after the stage records.
 Require its media_sha256 to match the acquired video's SHA256 before saving the transcription.
 Preserve its transcription text and availability exactly.
 The helper uses FFmpeg and faster-whisper inside Work cloud execution.
+It disables optional ONNX Runtime telemetry before importing the speech engine.
 It accepts files of at most 100 MB and videos of at most 600 seconds.
 An empty recognition result remains null and unavailable; it does not prove that speech is absent.
 If transcription fails, preserve valid stored content and report its safe stage diagnostics.

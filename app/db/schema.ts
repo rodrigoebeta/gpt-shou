@@ -36,6 +36,8 @@ export const references = sqliteTable("references", {
   cover: text("cover"),
   coverKey: text("cover_key"),
   failure: text("failure"),
+  lastAttemptAt: text("last_attempt_at"),
+  lastAttemptRunId: text("last_attempt_run_id"),
   updatedAt: text("updated_at").notNull(),
 });
 

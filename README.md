@@ -54,3 +54,16 @@ A conversa usada para o teste manual não substitui o resultado da execução ag
 Este pacote é uma versão para validação. Teste a instalação e a operação agendada na sua própria conta.
 O agente verifica a execução na nuvem antes de ativar a atualização automática.
 Se uma capacidade necessária estiver indisponível, o agente informa o impedimento e preserva os resultados já obtidos.
+
+## Skills incluídas
+
+- instalar: instala ou atualiza seu ShouBox privado.
+- autenticar: guia o acesso ao Instagram no navegador da nuvem.
+- capturar-favoritos: descobre e importa os Reels salvos, um por vez.
+- agendar: configura a tarefa na nuvem no intervalo escolhido.
+- processar-pendente: percorre a fila e remove os arquivos de cada item.
+
+A instalação adiciona essas skills ao plugin do seu próprio Site.
+A fila preserva cada tentativa após interrupções e prioriza itens ainda não tentados.
+Uma falha da transcrição mantém o item parcial e permite continuar as etapas disponíveis.
+Cancelamentos e limites da plataforma continuam possíveis. A tarefa agendada retoma o trabalho na próxima ocorrência.

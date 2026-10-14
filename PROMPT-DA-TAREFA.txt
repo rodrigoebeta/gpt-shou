@@ -1,51 +1,20 @@
-Atualize meu ShouBox em {{SITE_URL}} com meus Reels salvos do Instagram.
-Execute o fluxo novamente em cada ocorrência. Não apresente um relatório anterior como resultado atual.
-Execute somente na nuvem e use exclusivamente as ferramentas desta instalação.
-Use o navegador da nuvem com a sessão do Instagram preparada durante a instalação.
-Confirme o acesso aos meus Salvos no início da execução.
-Mantenha duas abas da tarefa enquanto processa um item: uma dos Salvos e outra exclusiva do item atual.
-Preserve a paginação e a posição da aba dos Salvos. Nunca abra o item nessa aba.
-Feche a aba do item ao concluir, falhar, ignorar ou interromper seu processamento.
-Confirme o fechamento antes de abrir a aba do próximo item. Não processe itens em paralelo.
-Preserve abas alheias à tarefa e a sessão autenticada do Instagram.
-Se o login expirar, preserve as pendências e peça que eu repita AUTENTICAR-INSTAGRAM.txt em uma conversa Work na nuvem.
-Não peça credenciais no chat nem use a sessão do meu computador.
-Obtenha o manifesto e as instruções atuais com get_runtime pelo plugin do ShouBox.
-Antes de start_run, confirme sync_collections, get_discovery e record_discovery_page no conector.
-Se uma ferramenta faltar, pare e informe os nomes ausentes. Não improvise outro meio de gravação.
-Use runtime 1.6.0, contrato 1.0.0 e pacote 0.1.0 com as configurações retornadas por start_run.
-Leia workflow.txt. Prepare o transcritor na execução Work na nuvem somente quando houver mídia para processar.
-Se baseline.status=collecting, conclua as listas pendentes antes de importar fontes desconhecidas.
-Exclua os Reels encontrados nesse levantamento, inclusive os salvos durante ele. Registre suas identidades sem processar mídia.
-Use register_sources para as verificações iniciais e a busca da âncora. Use record_discovery_page para avançar cada página.
-Ignore itens baseline_only. Confirme baseline.status=ready por releitura antes de importar identidades desconhecidas.
-Preserve a escolha initial_import. Não use set_import_mode durante a execução agendada.
-Respeite minhas coleções, categorias, tópicos, referências removidas e edições manuais.
-Confirme cada Reel e normalize seu link para https://www.instagram.com/reel/<shortcode>/ antes de register_sources.
-Use somente IDs de coleção registrados no ShouBox e associados à origem observada. Não envie IDs do Instagram nesses campos.
-Associe os IDs observados do Instagram com sync_collections, conforme workflow.txt.
-Leia get_discovery para cada lista e registre cada página com record_discovery_page antes de obter mídia.
-Retome pela última âncora confirmada. Releia cartões quando necessário e preserve referências existentes.
-Confirme o fim real da lista antes de marcar end_reached. Uma interrupção não comprova o fim.
-Use set_import_scope somente quando eu pedir uma mudança de escopo.
-Obtenha a legenda e a mídia, transcreva a fala e descreva visualmente o vídeo para a busca por palavras-chave.
-Preserve a fala original e acrescente sua tradução integral para português do Brasil quando houver outro idioma.
-Use content_version=1.2.0 e transcription_pt, conforme workflow.txt. Inclua os dois textos na busca e na classificação.
-Gere semantic_description pelo próprio modelo Work a partir da legenda, da fala e da inspeção visual verificadas.
-Descreva assunto, contexto, finalidade e conceitos em duas a quatro frases em português, sem inventar fatos.
-Use disponibilidade generated e inclua o texto na busca; se faltar suporte, use null/unavailable e mantenha o resultado parcial.
-Enriqueça referências antigas com tradução e descrição pendentes a partir das fontes salvas, sem repetir a análise da mídia.
-Grave a referência com sua capa original e sua classificação no meu Site.
-Confirme a gravação antes de informar sucesso.
-Use item_directory retornado pelo coletor para todos os arquivos do item, incluindo quadros, áudio derivado e JSON intermediário.
-Após gravar e reler o conteúdo e a capa no Site, execute node acquire.mjs --cleanup <item_directory>.
-Confirme ok=true, removed=true, a ausência dessa pasta e o diretório work vazio antes do próximo item.
-Em falhas, preserve o estado pendente ou parcial e execute a limpeza e o fechamento da aba, conforme workflow.txt.
-Se a gravação permanecer incerta ou a limpeza falhar, pare antes de outro item e relate o impedimento.
-Mantenha o modelo e as dependências compartilhadas até o fim da execução. Remova todo o runtime temporário ao terminar.
-Informe o run_id, o trigger enviado, os horários UTC de início e fim e o resultado de finish_run desta ocorrência.
-Se parar antes de start_run, informe run_id=null e o impedimento.
-Preserve o progresso e retome as pendências após interrupções ou limites do serviço.
-Mantenha incompletos os resultados que não puder verificar.
-Informe quando eu precisar renovar o acesso ou resolver um impedimento.
-Não use arquivos do meu computador, anexos da tarefa, APIs pagas de modelos ou cópias permanentes dos vídeos.
+Capture meus Reels salvos do Instagram para o ShouBox em SITE_URL.
+Execute novamente em cada ocorrência, somente no Work na nuvem.
+Use a skill capturar-favoritos deste plugin e o workflow.txt atual retornado por get_runtime.
+Use runtime 1.7.0 ou uma versão compatível posterior, contrato 1.0.0 e pacote da API 0.1.0.
+Confirme o acesso aos Salvos. Use trigger=scheduled nesta ocorrência automática.
+Preserve o escopo, a importação inicial, as edições manuais e as referências removidas.
+Continue a descoberta e o processamento até terminar o trabalho elegível ou encontrar um limite real do serviço.
+Não pare somente porque uma página ou alguns itens terminaram.
+Confirme cada página de descoberta no Site antes de obter mídia.
+Processe os itens pendentes um por vez e percorra todos os next_pending_cursor da lease atual.
+Renove a lease antes do vencimento. Use pending_cursor=null somente no início de uma nova lease ou na consulta final de novos pendentes.
+Grave e releia cada resultado. Remova os arquivos do item e feche sua aba antes do próximo.
+Preserve a aba dos Salvos e sua posição. Remova o runtime temporário ao terminar.
+Preserve a fala original, a tradução integral para português, a inspeção visual e a descrição semântica verificadas.
+Se a análise falhar, preserve o resultado parcial e continue as etapas disponíveis.
+Respeite os cooldowns de cada serviço, as rejeições de aprovação e os cancelamentos.
+Não contorne bloqueios de login, limites do Instagram ou controles do host.
+Retome os itens restantes na próxima ocorrência autorizada. Não crie tarefas extras.
+Informe run_id, started_at, finish_run e pendências quando houver avanço, falha ou ação necessária.
+Não envie uma notificação quando nada mudar e nenhuma ação for necessária.

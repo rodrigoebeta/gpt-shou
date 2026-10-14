@@ -35,6 +35,57 @@ const page=(collection,revision,after,last,end=false)=>({collection_id:collectio
 const read=id=>call('get_discovery',{collection_id:id});
 const finish=()=>call('finish_run',{...base(),outcome:'interrupted',cursor:lease.cursor,cooldowns:[]});
 
+test('pending traversal covers 123 items and survives a lost finish with partial failures',async()=>{
+  resetInstallation();await acquire();
+  for(let i=0;i<123;i+=50)await call('register_sources',{...base(),sources:Array.from({length:Math.min(50,123-i)},(_,j)=>source(`QUEUE_${i+j}`))});
+  const renewPage=cursor=>call('start_run',{...base(),mode:'renew',trigger:'manual',package_version:'0.1.0',pending_cursor:cursor});
+  const attempt=ref=>call('update_reference',{...base(),reference_id:ref.reference_id,expected_revision:ref.revision,outcome:'partial',analysis:null,content:null,classification:null,failure:{code:'ANALYSIS_FAILED',retry_at:null}});
+  let page=await renewPage(null);const processed=new Set();
+  assert.equal(page.started_at,db.prepare('SELECT started_at FROM runs WHERE id=?').get(lease.run_id).started_at);
+  for(const ref of page.pending.slice(0,7)){await attempt(ref);processed.add(ref.reference_id);}
+  const staleCursor=page.next_pending_cursor;
+  db.exec("UPDATE installations SET lease_expires='2000-01-01T00:00:00Z'");
+  await acquire();
+  await assert.rejects(()=>renewPage(staleCursor),{code:'INVALID_ARGUMENT'});
+  page=lease;
+  assert.equal(page.pending.length,50);
+  assert(page.pending.every(ref=>!processed.has(ref.reference_id)));
+  // A renewal with a null cursor must not retry items already attempted in this run.
+  await attempt(page.pending[0]);processed.add(page.pending[0].reference_id);
+  page=await renewPage(null);
+  const thisRun=new Set();let pages=0;
+  for(;;){
+    pages++;
+    for(const ref of page.pending){assert(!thisRun.has(ref.reference_id));thisRun.add(ref.reference_id);await attempt(ref);processed.add(ref.reference_id);}
+    if(!page.next_pending_cursor)break;
+    page=await renewPage(page.next_pending_cursor);
+  }
+  assert.equal(pages,3);assert.equal(processed.size,123);
+  assert.equal((await renewPage(null)).pending.length,0);
+  assert.equal(db.prepare('SELECT count(*) AS n FROM "references" WHERE last_attempt_at IS NOT NULL').get().n,123);
+  await finish();await acquire();assert.equal(lease.pending.length,50);
+  await finish();
+});
+
+test('analysis cooldown allows discovery; retry dates and terminal items do not block other work',async()=>{
+  resetInstallation();await acquire();
+  const added=await call('register_sources',{...base(),sources:['WAIT','GONE','NEXT'].map(key=>source(key))});
+  const wait=added.items[0].reference,gone=added.items[1].reference;
+  const later=new Date(Date.now()+600000).toISOString();
+  const update=(ref,outcome,failure)=>call('update_reference',{...base(),reference_id:ref.reference_id,expected_revision:ref.revision,outcome,analysis:null,content:null,classification:null,failure});
+  await update(wait,'retry_wait',{code:'RATE_LIMITED',retry_at:later});
+  await update(gone,'unavailable',{code:'SOURCE_UNAVAILABLE',retry_at:null});
+  await call('finish_run',{...base(),outcome:'retry_wait',cursor:lease.cursor,cooldowns:[{service:'analysis',limited_at:new Date().toISOString(),next_allowed_at:later,server_reset_at:null,backoff_step:1}]});
+  await acquire();assert.deepEqual(lease.pending.map(r=>r.source_key),['NEXT']);assert.equal(lease.cooldowns[0].service,'analysis');
+  await call('register_sources',{...base(),sources:[source('DISCOVERED_DURING_ASR_OUTAGE')]});
+  await finish();
+  db.prepare('UPDATE "references" SET failure=? WHERE id=?').run(JSON.stringify({code:'RATE_LIMITED',retry_at:'2000-01-01T00:00:00Z'}),wait.reference_id);
+  await acquire();assert(lease.pending.some(r=>r.reference_id===wait.reference_id));assert(!lease.pending.some(r=>r.reference_id===gone.reference_id));
+  await call('finish_run',{...base(),outcome:'retry_wait',cursor:lease.cursor,cooldowns:[{service:'instagram',limited_at:new Date().toISOString(),next_allowed_at:later,server_reset_at:null,backoff_step:1}]});
+  await assert.rejects(()=>acquire(),{code:'RATE_LIMITED'});
+  resetInstallation();
+});
+
 test('collection discovery and resume preserve references across page replay, failed writes, and expired leases',async t=>{
   await acquire();let a,b,first;
   await t.test('stable mappings, source rename, partial catalog, and explicit mapping conflicts',async()=>{

@@ -1,0 +1,30 @@
+---
+name: agendar
+description: Agenda a captura de favoritos do ShouBox em uma tarefa Work na nuvem, no intervalo e fuso escolhidos pela pessoa.
+---
+
+# Agendar a captura
+
+Confirme o Site, o intervalo e o fuso solicitados.
+Reutilize escolhas explícitas já fornecidas. Pergunte somente pelos valores ausentes.
+Leia as tarefas existentes antes de criar outra tarefa.
+Confirme o acesso aos Salvos e uma captura manual bem-sucedida.
+
+Use as ferramentas de agendamento da nuvem disponíveis neste host.
+Para uma tarefa ligada ao Site, leia get_site e suas automations.
+Use create_schedule somente com o schedule_request_id retornado por essa leitura.
+Repita o mesmo request_id se a resposta da criação se perder.
+Não crie uma duplicata para substituir uma atualização indisponível.
+Não use uma automação local do Codex como substituto de uma tarefa Work na nuvem.
+
+Use o [modelo de prompt](references/prompt.txt) e substitua SITE_URL pelo endereço confirmado.
+Inclua a instrução capturar-favoritos e a leitura do workflow atual.
+Preserve o intervalo escolhido no agendamento, sem criar ocorrências extras para esvaziar a fila.
+Informe a pessoa quando uma alteração do intervalo ajudar a concluir o acervo mais rapidamente.
+
+Confirme o identificador, o fuso, o intervalo e a próxima ocorrência retornados pelo agendador.
+Verifique uma ocorrência disparada pelo horário antes de declarar o agendamento testado.
+Uma execução manual comprova o fluxo manual, não o gatilho automático.
+Se faltar a ferramenta de criação ou atualização, entregue o prompt e indique a etapa pendente.
+Não declare que a tarefa existe sem uma confirmação do agendador.
+

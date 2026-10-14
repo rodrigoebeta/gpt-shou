@@ -15,6 +15,21 @@ spec.loader.exec_module(probe)
 
 
 class ProbeTests(unittest.TestCase):
+    def test_telemetry_is_disabled_before_speech_engine_import(self):
+        import builtins
+        calls = []
+        engine = object()
+        real_import = builtins.__import__
+        def fake_import(name, *args, **kwargs):
+            if name == "onnxruntime":
+                return SimpleNamespace(disable_telemetry_events=lambda: calls.append("disabled"))
+            if name == "faster_whisper":
+                self.assertEqual(calls, ["disabled"])
+                return SimpleNamespace(WhisperModel=engine)
+            return real_import(name, *args, **kwargs)
+        with patch("builtins.__import__", side_effect=fake_import):
+            self.assertIs(probe.speech_engine(), engine)
+
     def test_pcm_decoder_uses_binary_output_without_a_shell(self):
         pcm = b"\x00\x00\xff\x7f\x00\x80"
         with patch.object(probe.subprocess, "run", return_value=SimpleNamespace(stdout=pcm)) as run:

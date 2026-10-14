@@ -2,7 +2,7 @@
 
 ## Versões e capacidades
 
-Use aplicativo 0.1.0, contrato 1.0.0, conteúdo 1.2.0 e runtime cloud 1.6.0.
+Use aplicativo 0.1.0, contrato 1.0.0, conteúdo 1.2.0 e runtime cloud 1.7.0.
 Leia VERSION.json e verifique FILES.sha256 antes de executar o pacote.
 Esta versão exige validação completa na conta de destino antes da ativação automática.
 Não apresente como validada uma capacidade comprovada somente em outra conta ou em uma execução local.
@@ -193,8 +193,25 @@ Consulte a documentação oficial: https://learn.chatgpt.com/docs/automations.
 
 Mantenha aplicativo, runtime, contrato, onboarding e prompt compatíveis.
 Repita a verificação do catálogo após cada mudança nas ferramentas MCP.
-Atualize os prompts existentes para runtime 1.6.0 e conteúdo 1.2.0 antes de novas gravações.
+Atualize os prompts existentes para runtime 1.7.0 e conteúdo 1.2.0 antes de novas gravações.
 O Site mantém a leitura de conteúdo 1.0.0 e 1.1.0, mas exige 1.2.0 nas novas gravações de content.
 Uma alteração do template não atualiza uma tarefa já instalada.
 Leia a configuração da tarefa existente e atualize seu prompt dentro do escopo autorizado pela pessoa.
 Preserve dados, classificações e a identidade da instalação durante a atualização.
+
+## Skills do plugin
+
+Instale as cinco skills no plugin criado pelo Sites, conforme plugin/README.md.
+Use instalar, autenticar, capturar-favoritos, agendar e processar-pendente para suas respectivas funções.
+Preserve o plugin_id e sua conexão. Não crie um segundo plugin para o Site.
+Atualize tarefas existentes com PROMPT-DA-TAREFA.txt; a publicação não substitui seus prompts automaticamente.
+
+## Retomada da fila
+
+Cada tentativa salva sua posição no backend. Itens nunca tentados precedem as tentativas antigas.
+Processe todas as páginas next_pending_cursor da lease atual. Uma página não representa a fila inteira.
+Inicie uma nova lease com pending_cursor=null após interrupções. Preserve as âncoras de descoberta.
+Continue a descoberta durante uma falha da análise e mantenha os resultados parciais.
+Respeite os cooldowns por serviço, os cancelamentos e as rejeições de aprovação.
+A retomada automática depende de uma tarefa na nuvem com um horário confirmado.
+Não declare a biblioteca completa quando houver listas incompletas ou itens adiados.

@@ -11,7 +11,7 @@
   "tools": [
     {
       "name": "start_run",
-      "description": "Acquire or renew the owner's run lease and return a bounded pending-work page.",
+      "description": "Acquire or renew the run lease and page through eligible work. Persisted attempts survive restarts; analysis cooldowns do not block discovery.",
       "annotations": {
         "readOnlyHint": false,
         "destructiveHint": false,
@@ -599,6 +599,12 @@
               "completed_at"
             ],
             "additionalProperties": false
+          },
+          "started_at": {
+            "type": "string",
+            "maxLength": 30,
+            "format": "date-time",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$"
           }
         },
         "required": [
@@ -611,7 +617,8 @@
           "cursor",
           "cooldowns",
           "pending",
-          "next_pending_cursor"
+          "next_pending_cursor",
+          "started_at"
         ],
         "additionalProperties": false
       },
@@ -760,7 +767,7 @@
           },
           "runtime_version": {
             "type": "string",
-            "const": "1.6.0"
+            "const": "1.7.0"
           },
           "manifest": {
             "type": "object",
@@ -775,7 +782,7 @@
             "properties": {
               "runtime_version": {
                 "type": "string",
-                "const": "1.6.0"
+                "const": "1.7.0"
               },
               "execution": {
                 "type": "string",

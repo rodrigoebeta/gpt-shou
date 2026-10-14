@@ -204,6 +204,14 @@ def validate_versions(packages):
         raise ValueError("Unexpected ASR dependency versions")
 
 
+def speech_engine():
+    import onnxruntime
+    # Disable optional telemetry before faster-whisper can create a VAD session.
+    onnxruntime.disable_telemetry_events()
+    from faster_whisper import WhisperModel
+    return WhisperModel
+
+
 def main():
     if platform.system() != "Linux" or platform.machine() != "x86_64":
         raise SystemExit("Run only in the Work cloud Linux x86_64 environment.")
@@ -216,6 +224,9 @@ def main():
     model = state / "model"
     cache.mkdir(parents=True, exist_ok=True)
     env = {**os.environ, "PIP_CACHE_DIR": str(cache / "pip"), "PIP_DISABLE_PIP_VERSION_CHECK": "1", "HF_HOME": str(cache / "hf"), "HF_HUB_CACHE": str(cache / "hf" / "hub"), "HF_HUB_DISABLE_PROGRESS_BARS": "1", "HF_HUB_DISABLE_TELEMETRY": "1", "XDG_CACHE_HOME": str(cache), "OMP_NUM_THREADS": "2", "TMPDIR": str(cache), "TEMP": str(cache), "TMP": str(cache)}
+
+    env.update({"HF_HUB_ETAG_TIMEOUT": "30", "HF_HUB_DOWNLOAD_TIMEOUT": "60", "DO_NOT_TRACK": "1"})
+    os.environ.update(env)
 
     def run(args, timeout):
         return subprocess.run(args, cwd=root, env=env, capture_output=True, text=True, check=True, timeout=timeout)
@@ -237,7 +248,7 @@ def main():
     if sys.argv[1] == "--check":
         from huggingface_hub import hf_hub_download
         from huggingface_hub.utils import get_session
-        from faster_whisper import WhisperModel
+        speech_engine()
         import requests
         import socks
         get_session()
@@ -264,7 +275,7 @@ def main():
     def engine_imports():
         if importlib.metadata.version("faster-whisper") != VERSION:
             raise ValueError("Unexpected faster-whisper version")
-        from faster_whisper import WhisperModel
+        WhisperModel = speech_engine()
         import numpy as np
         return WhisperModel, np
 
