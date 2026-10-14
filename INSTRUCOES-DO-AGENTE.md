@@ -2,7 +2,7 @@
 
 ## Versões e capacidades
 
-Use aplicativo 0.1.0, contrato 1.0.0, conteúdo 1.2.0 e runtime cloud 1.7.0.
+Use aplicativo 0.1.0, contrato 1.0.0, conteúdo 1.2.0 e runtime cloud 1.7.1.
 Leia VERSION.json e verifique FILES.sha256 antes de executar o pacote.
 Esta versão exige validação completa na conta de destino antes da ativação automática.
 Não apresente como validada uma capacidade comprovada somente em outra conta ou em uma execução local.
@@ -192,7 +192,7 @@ Consulte a documentação oficial: https://learn.chatgpt.com/docs/automations.
 
 Mantenha aplicativo, runtime, contrato, onboarding e prompt compatíveis.
 Repita a verificação do catálogo após cada mudança nas ferramentas MCP.
-Atualize os prompts existentes para runtime 1.7.0 e conteúdo 1.2.0 antes de novas gravações.
+Atualize os prompts existentes para runtime 1.7.1 e conteúdo 1.2.0 antes de novas gravações.
 O Site mantém a leitura de conteúdo 1.0.0 e 1.1.0, mas exige 1.2.0 nas novas gravações de content.
 Uma alteração do template não atualiza uma tarefa já instalada.
 Leia a configuração da tarefa existente e atualize seu prompt dentro do escopo autorizado pela pessoa.

@@ -1,4 +1,4 @@
-ShouBox cloud runtime 1.7.0
+ShouBox cloud runtime 1.7.1
 
 Run media acquisition and analysis only in ChatGPT Work cloud execution.
 Use this installation's native ShouBox tools and the owner's cloud Instagram session.
@@ -33,6 +33,8 @@ Run node bootstrap.mjs in that cloud directory.
 This installs only the pinned technical acquisition dependencies inside the directory.
 It performs no transcription or visual analysis.
 Run python transcribe.py --prepare in the same cloud directory.
+The helper disables ONNX telemetry before importing ONNX Runtime, including its initialization event.
+Keep ORT_DISABLE_TELEMETRY=1 and the existing telemetry opt-outs enabled.
 Attempt preparation at most twice for a transient failure.
 If preparation remains unavailable, skip further preparation attempts during this run.
 Continue discovery, acquisition, and available inspection. Save unavailable speech as partial without replacing valid stored speech.

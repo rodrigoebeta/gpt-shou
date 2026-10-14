@@ -22,12 +22,13 @@ class ProbeTests(unittest.TestCase):
         real_import = builtins.__import__
         def fake_import(name, *args, **kwargs):
             if name == "onnxruntime":
+                self.assertEqual(probe.os.environ.get("ORT_DISABLE_TELEMETRY"), "1")
                 return SimpleNamespace(disable_telemetry_events=lambda: calls.append("disabled"))
             if name == "faster_whisper":
                 self.assertEqual(calls, ["disabled"])
                 return SimpleNamespace(WhisperModel=engine)
             return real_import(name, *args, **kwargs)
-        with patch("builtins.__import__", side_effect=fake_import):
+        with patch.dict(probe.os.environ, {"ORT_DISABLE_TELEMETRY": "0"}), patch("builtins.__import__", side_effect=fake_import):
             self.assertIs(probe.speech_engine(), engine)
 
     def test_pcm_decoder_uses_binary_output_without_a_shell(self):

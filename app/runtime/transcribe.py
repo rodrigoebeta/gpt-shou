@@ -205,6 +205,8 @@ def validate_versions(packages):
 
 
 def speech_engine():
+    # The API opt-out alone can leave an initialization event.
+    os.environ["ORT_DISABLE_TELEMETRY"] = "1"
     import onnxruntime
     # Disable optional telemetry before faster-whisper can create a VAD session.
     onnxruntime.disable_telemetry_events()
