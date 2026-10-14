@@ -258,3 +258,11 @@ The player follows the current result order and loads the next result page when 
 Touch navigation uses a 44px side area outside the Instagram embed. The embed retains its controls.
 Use vertical swipes in that area, arrow buttons, or keyboard arrows to change the reference.
 Mobile playback fills the viewport. Closing playback restores focus to the original cover.
+
+### Library scrolling
+
+Load the next result page within 1800px of the viewport. Keep one page request active.
+Preserve loaded cards and the scroll position after removal or restore. Adjust the cursor after a loaded item leaves the list.
+Keep loaded cards after a page request fails. Show an explicit retry action.
+Load the first five covers immediately. Start other cover requests within 1800px of the viewport.
+Use private browser caching for versioned covers. Keep the existing cover dimensions during loading.

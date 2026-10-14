@@ -63,18 +63,18 @@ function FilterPicker({group,values,onChange}: {group:Group;values:Option[];onCh
   return mobile?<Dialog.Root open={open} onOpenChange={close}><Dialog.Trigger asChild>{trigger}</Dialog.Trigger><Dialog.Portal><Dialog.Overlay className="sheet-overlay"/><Dialog.Content className="picker-sheet" aria-describedby={undefined} onOpenAutoFocus={e=>{e.preventDefault();search.current?.focus();}}>{content}</Dialog.Content></Dialog.Portal></Dialog.Root>:<Popover.Root open={open} onOpenChange={close}><Popover.Trigger asChild>{trigger}</Popover.Trigger><Popover.Portal><Popover.Content className="picker-popover" sideOffset={10} align="center" onOpenAutoFocus={e=>{e.preventDefault();search.current?.focus();}}>{content}</Popover.Content></Popover.Portal></Popover.Root>;
 }
 
-function ReelCard({reel,onChange,onEdit,onPlay}: {reel:Reel;onChange:(reel:Reel,action:string)=>void;onEdit:()=>void;onPlay:()=>void}) {
+function ReelCard({reel,priority,disabled,onChange,onEdit,onPlay}: {reel:Reel;priority:boolean;disabled:boolean;onChange:(reel:Reel,action:string)=>void;onEdit:()=>void;onPlay:()=>void}) {
   const initials=(reel.creator??"?").replace(/^@/,"").slice(0,2).toUpperCase();
-  return <article className="reel-card" data-testid="reel" data-creator={reel.creator}>
+  return <article className="reel-card" data-testid="reel" data-reference-id={reel.id} data-creator={reel.creator}>
     <div className="cover-frame">
-      {reel.cover_url?<img src={reel.cover_url} alt={`Reel de ${reel.creator??"criador"}`} width="720" height="1280" loading="lazy"/>:<div className="missing-cover"><Bookmark size={32}/><span>Sem capa</span></div>}
+      {reel.cover_url?<img src={reel.cover_url} alt={`Reel de ${reel.creator??"criador"}`} width="720" height="1280" loading={priority?"eager":"lazy"} decoding="async"/>:<div className="missing-cover"><Bookmark size={32}/><span>Sem capa</span></div>}
       <div className="cover-shade" aria-hidden="true"/>
       {states[reel.outcome]&&<Badge className="partial-badge"><span aria-hidden="true"/>{states[reel.outcome]}</Badge>}
       <span className="cover-type"><Play size={10} fill="currentColor" aria-hidden="true"/>Reel</span>
       <button className="cover-open" onClick={onPlay} aria-label={`Reproduzir Reel de ${reel.creator??"criador"}`}><span className="cover-play" aria-hidden="true"><Play size={16} fill="currentColor"/></span></button>
       <a className="cover-source" href={reel.source_url} target="_blank" rel="noopener noreferrer" aria-label={`Abrir Reel de ${reel.creator??"criador"} no Instagram`}><ArrowUpRight size={16}/></a>
     </div>
-    <div className="creator-row"><span className="creator-avatar blue" aria-hidden="true">{initials}</span><h2>{reel.creator??"Criador"}</h2><DropdownMenu.Root><DropdownMenu.Trigger asChild><Button className="card-menu" variant="ghost" size="icon" aria-label={`Opções de ${reel.creator??"referência"}`}><MoreHorizontal size={17}/></Button></DropdownMenu.Trigger><DropdownMenu.Portal><DropdownMenu.Content className="card-menu-content" align="end" sideOffset={4}>
+    <div className="creator-row"><span className="creator-avatar blue" aria-hidden="true">{initials}</span><h2>{reel.creator??"Criador"}</h2><DropdownMenu.Root><DropdownMenu.Trigger asChild><Button className="card-menu" disabled={disabled} variant="ghost" size="icon" aria-label={`Opções de ${reel.creator??"referência"}`}><MoreHorizontal size={17}/></Button></DropdownMenu.Trigger><DropdownMenu.Portal><DropdownMenu.Content className="card-menu-content" align="end" sideOffset={4}>
       {!reel.removed&&<DropdownMenu.Item onSelect={onEdit}><Pencil size={14}/>Classificar</DropdownMenu.Item>}
       <DropdownMenu.Item onSelect={()=>onChange(reel,reel.removed?"restore":"remove")}>{reel.removed?<RotateCcw size={14}/>:<Trash2 size={14}/>} {reel.removed?"Restaurar":"Remover"}</DropdownMenu.Item>
     </DropdownMenu.Content></DropdownMenu.Portal></DropdownMenu.Root></div>
@@ -107,30 +107,76 @@ export default function Library({initial}:{initial:string}) {
   const search=React.useRef<HTMLInputElement>(null);
   const filters=React.useMemo(()=>Object.fromEntries(Object.entries(selected).map(([key,values])=>[key,values.map(value=>value.id)])),[selected]);
   const pageRequest=React.useRef<AbortController|null>(null);
+  const pagePromise=React.useRef<Promise<Reel[]>|null>(null);
+  const grid=React.useRef<HTMLElement>(null),sentinel=React.useRef<HTMLDivElement>(null);
+  const generation=React.useRef(0),mutating=React.useRef(false);
+  const scrollAfterChange=React.useRef<{x:number;y:number;index:number}|null>(null);
+  const [pageFailure,setPageFailure]=React.useState(false);
+  const postSearch=React.useCallback((cursor:string|null,signal?:AbortSignal)=>api("/api/search",{method:"POST",body:JSON.stringify({query,filters,order,removed,cursor}),signal}),[query,filters,order,removed]);
   React.useEffect(()=>{api("/api/session").then(setSession).catch(()=>setSessionError(true));},[revision]);
   React.useEffect(()=>{const handler=(event:KeyboardEvent)=>{if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==="k"){event.preventDefault();search.current?.focus();}};document.addEventListener("keydown",handler);return()=>document.removeEventListener("keydown",handler);},[]);
   React.useEffect(()=>{
-    pageRequest.current?.abort();pageRequest.current=null;setPlaying(null);
+    generation.current++;scrollAfterChange.current=null;
+    pageRequest.current?.abort();pageRequest.current=null;pagePromise.current=null;setPlaying(null);setPageFailure(false);
     if(!session)return;
     if(!session.connected){setLoading(false);setResult({items:[],total:0,cursor:null});return;}
     const controller=new AbortController();
-    const timer=setTimeout(()=>{setLoading(true);setFailure(false);postSearch(null,controller.signal).then(setResult).catch(e=>{if(e.name!=="AbortError")setFailure(true);}).finally(()=>{if(!controller.signal.aborted)setLoading(false);});},150);
+    setLoading(true);setFailure(false);
+    const timer=setTimeout(()=>{postSearch(null,controller.signal).then(setResult).catch(e=>{if(e.name!=="AbortError")setFailure(true);}).finally(()=>{if(!controller.signal.aborted)setLoading(false);});},150);
     return()=>{clearTimeout(timer);controller.abort();pageRequest.current?.abort();};
   },[session?.connected,query,filters,order,removed,revision]);
-  const postSearch=(cursor:string|null,signal?:AbortSignal)=>api("/api/search",{method:"POST",body:JSON.stringify({query,filters,order,removed,cursor}),signal});
-  const loadMore=async():Promise<Reel[]>=>{
-    if(!result.cursor||pageRequest.current)return [];
-    const controller=new AbortController();pageRequest.current=controller;setLoading(true);
-    try{
+  const loadMore=React.useCallback(():Promise<Reel[]>=>{
+    if(pagePromise.current)return pagePromise.current;
+    if(!result.cursor||loading||mutating.current)return Promise.resolve([]);
+    const controller=new AbortController();pageRequest.current=controller;setLoading(true);setPageFailure(false);
+    const request=(async()=>{try{
       const data=await postSearch(result.cursor,controller.signal);
       if(controller.signal.aborted)return [];
       const known=new Set(result.items.map(item=>item.id));
       const more:Reel[]=data.items.filter((item:Reel)=>!known.has(item.id));
       setResult(old=>({...data,items:[...old.items,...more]}));return more;
-    }finally{if(pageRequest.current===controller){pageRequest.current=null;setLoading(false);}}
-  };
+    }catch(error){if(!controller.signal.aborted)setPageFailure(true);throw error;}
+    finally{if(pageRequest.current===controller){pageRequest.current=null;pagePromise.current=null;setLoading(false);}}})();
+    pagePromise.current=request;return request;
+  },[result,loading,postSearch]);
+  React.useEffect(()=>{
+    if(!sentinel.current||loading||busy||playing||pageFailure||failure)return;
+    const observer=new IntersectionObserver(entries=>{if(entries.some(entry=>entry.isIntersecting))void loadMore().catch(()=>{});},{rootMargin:"1800px 0px"});
+    observer.observe(sentinel.current);return()=>observer.disconnect();
+  },[loadMore,loading,busy,playing,pageFailure,failure]);
+  React.useEffect(()=>{
+    const observer=new IntersectionObserver(entries=>{for(const entry of entries){if(entry.isIntersecting){entry.target.setAttribute("loading","eager");observer.unobserve(entry.target);}}},{rootMargin:"1800px 0px"});
+    grid.current?.querySelectorAll('img[loading="lazy"]').forEach(image=>observer.observe(image));
+    return()=>observer.disconnect();
+  },[result.items]);
+  React.useLayoutEffect(()=>{
+    const position=scrollAfterChange.current;if(!position)return;
+    scrollAfterChange.current=null;
+    const buttons=grid.current?.querySelectorAll<HTMLButtonElement>(".card-menu");
+    buttons?.[Math.min(position.index,buttons.length-1)]?.focus({preventScroll:true});
+    window.scrollTo({left:position.x,top:position.y,behavior:"instant"});
+  },[result.items]);
   const clear=()=>{setSelected(blank);setQuery("");search.current?.focus();};
-  const change=async(reel:Reel,action:string)=>{if(busy)return;setBusy(true);try{await post("/api/references",{id:reel.id,expected_revision:reel.revision,action});setRevision(v=>v+1);setNotice(action==="remove"?"Referência removida":"Referência restaurada");}catch(e){setNotice((e as Error).message);}finally{setBusy(false);}};
+  const change=async(reel:Reel,action:string)=>{
+    if(mutating.current||busy||(loading&&!pageRequest.current))return;
+    mutating.current=true;setBusy(true);const currentGeneration=generation.current;
+    if(pageRequest.current){pageRequest.current.abort();pageRequest.current=null;pagePromise.current=null;setLoading(false);}
+    try{
+      await post("/api/references",{id:reel.id,expected_revision:reel.revision,action});
+      if(currentGeneration===generation.current){
+        scrollAfterChange.current={x:window.scrollX,y:window.scrollY,index:result.items.findIndex(item=>item.id===reel.id)};
+        setResult(old=>{
+          if(!old.items.some(item=>item.id===reel.id))return old;
+          // Offset cursors must move back when a loaded reference leaves the result set.
+          const cursor=old.cursor?JSON.parse(atob(old.cursor)):null;
+          if(cursor)cursor.offset=Math.max(0,cursor.offset-1);
+          return {...old,items:old.items.filter(item=>item.id!==reel.id),total:Math.max(0,old.total-1),cursor:cursor?btoa(JSON.stringify(cursor)):null};
+        });
+      }else setRevision(value=>value+1);
+      setNotice(action==="remove"?"Referência removida":"Referência restaurada");
+    }catch(error){setNotice((error as Error).message);}
+    finally{mutating.current=false;setBusy(false);}
+  };
   const edit=(reel:Reel)=>{setEditing(reel);setClassification({category:reel.categories,topic:reel.topics});};
   const saveClassification=async()=>{if(!editing||busy)return;setBusy(true);try{await post("/api/references",{id:editing.id,expected_revision:editing.revision,action:"classify",category_ids:classification.category.map(value=>value.id),topic_ids:classification.topic.map(value=>value.id)});setEditing(null);setRevision(v=>v+1);setNotice("Classificação atualizada");}catch(e){setNotice((e as Error).message);}finally{setBusy(false);}};
   const chips=Object.entries(selected).flatMap(([group,values])=>values.map(value=>({group:group as Group,...value})));
@@ -154,8 +200,8 @@ export default function Library({initial}:{initial:string}) {
           </SelectContent>
         </Select>
       </div>
-      {sessionError||failure?<section className="empty-state" role="alert"><h2>Não foi possível carregar</h2><Button className="reset-button" onClick={()=>{setSessionError(false);setRevision(v=>v+1);}}>Tentar novamente</Button></section>:!session?.connected&&!loading?<section className="empty-state"><div className="empty-symbol"><Bookmark size={28}/></div><h2>Conexão pendente</h2><Button className="reset-button" onClick={()=>setRevision(v=>v+1)}>Atualizar</Button></section>:loading&&result.items.length===0?<section className="empty-state" aria-busy="true"><LoaderCircle className="loading-icon" size={24}/></section>:result.items.length?<section className="reel-grid" aria-label={removed?"Referências removidas":"Referências"} aria-busy={loading}>{result.items.map(reel=><ReelCard key={reel.id} reel={reel} onChange={change} onEdit={()=>edit(reel)} onPlay={()=>setPlaying(reel)}/>)}</section>:<section className="empty-state"><div className="empty-symbol"><Bookmark size={28}/></div><h2>{active?"Nenhum resultado":removed?"Nenhuma referência removida":"Nenhuma referência"}</h2>{active&&<Button className="reset-button" onClick={clear}>Limpar filtros</Button>}</section>}
-      {result.cursor&&<div className="library-more"><Button disabled={loading} onClick={()=>void loadMore().catch(e=>{if(e.name!=="AbortError")setNotice(e.message);})}>Mais referências</Button></div>}
+      {sessionError||failure?<section className="empty-state" role="alert"><h2>Não foi possível carregar</h2><Button className="reset-button" onClick={()=>{setSessionError(false);setRevision(v=>v+1);}}>Tentar novamente</Button></section>:!session?.connected&&!loading?<section className="empty-state"><div className="empty-symbol"><Bookmark size={28}/></div><h2>Conexão pendente</h2><Button className="reset-button" onClick={()=>setRevision(v=>v+1)}>Atualizar</Button></section>:loading&&result.items.length===0?<section className="empty-state" aria-busy="true"><LoaderCircle className="loading-icon" size={24}/></section>:result.items.length?<section ref={grid} className="reel-grid" aria-label={removed?"Referências removidas":"Referências"} aria-busy={loading}>{result.items.map((reel,index)=><ReelCard key={reel.id} reel={reel} priority={index<5} disabled={busy||(loading&&!pageRequest.current)} onChange={change} onEdit={()=>edit(reel)} onPlay={()=>setPlaying(reel)}/>)}</section>:<section className="empty-state"><div className="empty-symbol"><Bookmark size={28}/></div><h2>{active?"Nenhum resultado":removed?"Nenhuma referência removida":"Nenhuma referência"}</h2>{active&&<Button className="reset-button" onClick={clear}>Limpar filtros</Button>}</section>}
+      {result.cursor&&!failure&&!sessionError&&<div ref={sentinel} className="library-more" aria-live="polite">{pageFailure?<div><p>Não foi possível carregar mais referências.</p><Button onClick={()=>void loadMore().catch(()=>{})}>Tentar novamente</Button></div>:loading?<p className="picker-status" role="status"><LoaderCircle size={16} className="loading-icon"/>Carregando mais referências</p>:null}</div>}
     </main></div>
     {notice&&<div className="notification" role="status"><span>{notice}</span><Button variant="ghost" size="icon" aria-label="Fechar aviso" onClick={()=>setNotice("")}><X size={17}/></Button></div>}
     <Dialog.Root open={!!editing} onOpenChange={value=>{if(!value)setEditing(null);}}><Dialog.Portal><Dialog.Overlay className="sheet-overlay"/><Dialog.Content className="classification-panel" aria-describedby={undefined}><div className="panel-heading"><Dialog.Title>Classificar</Dialog.Title><Dialog.Close asChild><Button variant="ghost" size="icon" aria-label="Fechar classificação"><X size={20}/></Button></Dialog.Close></div><div className="classification-pickers"><FilterPicker group="category" values={classification.category} onChange={category=>setClassification(old=>({...old,category}))}/><FilterPicker group="topic" values={classification.topic} onChange={topic=>setClassification(old=>({...old,topic}))}/></div><div className="classification-values">{[...classification.category,...classification.topic].map(item=><Badge key={item.id} className="blue">{item.label}</Badge>)}</div><Button className="save-classification" disabled={busy} onClick={saveClassification}>Salvar</Button></Dialog.Content></Dialog.Portal></Dialog.Root>

@@ -24,7 +24,7 @@ const browserBundle=await build({entryPoints:[fileURLToPath(new URL('../server/b
   b.onResolve({filter:/^\.\/cover$/},()=>({path:'cover',namespace:'fixture'}));
   b.onLoad({filter:/.*/,namespace:'fixture'},a=>({contents:a.path==='env'?'export const env=globalThis.__discoveryEnv':'export function inspectCover(){throw Error("No media") }'}));
 }}]});
-const {search,changeSettings,facets}=await import(`data:text/javascript;base64,${Buffer.from(browserBundle.outputFiles[0].text).toString('base64')}`);
+const {search,changeSettings,facets,coverResponse,changeReference}=await import(`data:text/javascript;base64,${Buffer.from(browserBundle.outputFiles[0].text).toString('base64')}`);
 const headers=new Headers({'oai-authenticated-user-id':'fixture_owner','oai-authenticated-user-email':'fixture@example.test'});
 let lease,tax;
 const base=()=>({contract_version:'1.0.0',request_id:crypto.randomUUID(),run_id:lease.run_id,lease_epoch:lease.lease_epoch});
@@ -315,4 +315,28 @@ test('new-only collection scope waits for every initial list and preserves impor
     assert.deepEqual(changed.baseline.pending_list_ids,[null]);
     const empty=await call('record_discovery_page',{...base(),page:page(null,0,null,null,true),sources:[]});assert.equal(empty.baseline.status,'ready');
   });
+});
+
+
+test('versioned covers permit private browser reuse and still require owner authorization',async()=>{
+  resetInstallation();await acquire();
+  const added=await call('register_sources',{...base(),sources:[source('CACHED_COVER')]});
+  const id=added.items[0].reference.reference_id;
+  db.prepare('UPDATE "references" SET cover_key=?,cover=? WHERE id=?').run('fixture-cover',JSON.stringify({mime_type:'image/webp'}),id);
+  let reads=0;
+  globalThis.__discoveryEnv.BUCKET={get:async()=>{reads++;return {body:new Uint8Array([1,2,3])};}};
+  try{
+    const first=await search({query:'',filters:{category:[],topic:[],creator:[],collection:[]},order:'recent',removed:false,cursor:null},headers);
+    const response=await coverResponse(id,headers);
+    assert.equal(response.headers.get('Cache-Control'),'private, max-age=3600');
+    assert.equal(response.headers.get('Vary'),'Cookie, Authorization, OAI-Sites-Authorization');
+    assert.equal(response.headers.get('Content-Type'),'image/webp');
+    assert.equal(response.headers.get('X-Content-Type-Options'),'nosniff');
+    assert.deepEqual([...new Uint8Array(await response.arrayBuffer())],[1,2,3]);
+    await assert.rejects(coverResponse(id,new Headers()),error=>error.code==='UNAUTHENTICATED');
+    await assert.rejects(coverResponse(id,new Headers({'oai-authenticated-user-id':'someone_else','oai-authenticated-user-email':'other@example.test'})));
+    assert.equal(reads,1);
+    const updated=await changeReference({id,expected_revision:first.items[0].revision,action:'remove'},headers);
+    assert.notEqual(updated.item.cover_url,first.items[0].cover_url);
+  }finally{delete globalThis.__discoveryEnv.BUCKET;await finish();}
 });

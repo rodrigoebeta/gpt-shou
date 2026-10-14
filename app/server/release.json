@@ -1,5 +1,5 @@
 {
   "schema_version": 1,
-  "version": "1.7.5",
-  "summary": "ShouBox agora se chama shōu. Atualiza a marca, as instruções e o repositório oficial."
+  "version": "1.7.6",
+  "summary": "Carrega referências durante a rolagem, mantém a posição ao remover e antecipa o carregamento das capas."
 }

@@ -145,7 +145,7 @@ export async function coverResponse(id:string,headers:Headers) {
   const object=await env.BUCKET.get(row.cover_key);
   if(!object)throw new AppError("NOT_FOUND");
   const mime=JSON.parse(row.cover).mime_type;
-  return new Response(object.body,{headers:{"Content-Type":mime,"Cache-Control":"private, no-store","X-Content-Type-Options":"nosniff"}});
+  return new Response(object.body,{headers:{"Content-Type":mime,"Cache-Control":"private, max-age=3600","Vary":"Cookie, Authorization, OAI-Sites-Authorization","X-Content-Type-Options":"nosniff"}});
 }
 
 export function errorResponse(error:unknown) {

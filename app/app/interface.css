@@ -33,3 +33,5 @@ body .nav-inactive{opacity:1!important}
 .update-instructions textarea{display:block;width:100%;padding:12px 14px;border:1px solid #ccd8e6;border-radius:10px;background:white;color:#365b80;font:inherit;line-height:1.6;resize:vertical;min-height:140px}
 .update-instructions textarea:focus-visible{outline:2px solid #557ca7;outline-offset:3px}.update-copy{display:flex;align-items:center;gap:14px;margin-top:14px}.update-copy span{font-size:13px;color:#52657e;max-width:55ch}
 @media(max-width:650px){.update-notice{padding:16px;margin-bottom:24px}.update-notice-heading{align-items:flex-start;flex-direction:column;gap:12px}.update-copy{align-items:flex-start;flex-direction:column}.update-instructions textarea{font-size:16px;min-height:210px}}
+
+.library-more{min-height:48px;padding-bottom:80px}.library-more .picker-status{justify-content:center}
