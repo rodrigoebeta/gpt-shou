@@ -6,6 +6,7 @@ import { Bookmark, Search, LayoutGrid, Trash2, Settings2, ArrowRight, ArrowUpRig
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ReelPlayer } from "@/components/reel-player";
 
 type Option={id:string;label:string};
@@ -143,7 +144,15 @@ export default function Library({initial}:{initial:string}) {
     <main className="workspace" id="library"><div className="library-heading"><h1>{removed?"Removidos":"Biblioteca"}</h1></div>
       <section className="toolbar" aria-label="Filtros da biblioteca"><div className="filter-controls"><SlidersHorizontal className="filter-symbol" size={16} aria-hidden="true"/>{(Object.keys(labels) as Group[]).map(group=><FilterPicker key={group} group={group} values={selected[group]} onChange={values=>setSelected(old=>({...old,[group]:values}))}/>)}{active&&<Button variant="ghost" className="clear-filters" onClick={clear}>Limpar tudo</Button>}</div>
       {chips.length>0&&<div className="selection-chips" aria-label="Filtros selecionados">{chips.slice(0,3).map(item=><Button variant="ghost" key={`${item.group}:${item.id}`} aria-label={`Remover filtro ${item.label}`} onClick={()=>setSelected(old=>({...old,[item.group]:old[item.group].filter(value=>value.id!==item.id)}))}>{item.label}<X size={12}/></Button>)}{chips.length>3&&<span className="more-chips">+{chips.length-3}</span>}</div>}</section>
-      <div className="results-bar"><p role="status" aria-live="polite">{loading?"Buscando":`${result.total} ${result.total===1?"referência":"referências"}`}</p><select className="sort-trigger" aria-label="Ordenar referências" value={order} onChange={e=>setOrder(e.target.value)}><option value="best">Melhor correspondência</option><option value="recent">Salvos mais recentes</option></select></div>
+      <div className="results-bar"><p role="status" aria-live="polite">{loading?"Buscando":`${result.total} ${result.total===1?"referência":"referências"}`}</p>
+        <Select value={order} onValueChange={setOrder}>
+          <SelectTrigger className="sort-trigger" aria-label="Ordenar referências"><SelectValue/></SelectTrigger>
+          <SelectContent className="filter-menu sort-menu" position="popper" align="end" sideOffset={6}>
+            <SelectItem value="best">Melhor correspondência</SelectItem>
+            <SelectItem value="recent">Salvos mais recentes</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
       {sessionError||failure?<section className="empty-state" role="alert"><h2>Não foi possível carregar</h2><Button className="reset-button" onClick={()=>{setSessionError(false);setRevision(v=>v+1);}}>Tentar novamente</Button></section>:!session?.connected&&!loading?<section className="empty-state"><div className="empty-symbol"><Bookmark size={28}/></div><h2>Conexão pendente</h2><Button className="reset-button" onClick={()=>setRevision(v=>v+1)}>Atualizar</Button></section>:loading&&result.items.length===0?<section className="empty-state" aria-busy="true"><LoaderCircle className="loading-icon" size={24}/></section>:result.items.length?<section className="reel-grid" aria-label={removed?"Referências removidas":"Referências"} aria-busy={loading}>{result.items.map(reel=><ReelCard key={reel.id} reel={reel} onChange={change} onEdit={()=>edit(reel)} onPlay={()=>setPlaying(reel)}/>)}</section>:<section className="empty-state"><div className="empty-symbol"><Bookmark size={28}/></div><h2>{active?"Nenhum resultado":removed?"Nenhuma referência removida":"Nenhuma referência"}</h2>{active&&<Button className="reset-button" onClick={clear}>Limpar filtros</Button>}</section>}
       {result.cursor&&<div className="library-more"><Button disabled={loading} onClick={()=>void loadMore().catch(e=>{if(e.name!=="AbortError")setNotice(e.message);})}>Mais referências</Button></div>}
     </main></div>
