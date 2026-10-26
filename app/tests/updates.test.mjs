@@ -33,7 +33,7 @@ test("release checks share a cache and send no installation information", async 
   const results=await Promise.all([checkUpdates(),checkUpdates()]);
   assert.equal(requests,1);
   assert.equal(results[0].status,"available");
-  assert.equal(results[0].installed_version,"1.7.7");
+  assert.equal(results[0].installed_version,"1.7.8");
   assert.deepEqual(results[0],results[1]);
   await checkUpdates();assert.equal(requests,1);
   now+=15*60*1000+1;

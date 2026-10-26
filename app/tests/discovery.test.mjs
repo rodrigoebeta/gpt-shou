@@ -24,7 +24,7 @@ const browserBundle=await build({entryPoints:[fileURLToPath(new URL('../server/b
   b.onResolve({filter:/^\.\/cover$/},()=>({path:'cover',namespace:'fixture'}));
   b.onLoad({filter:/.*/,namespace:'fixture'},a=>({contents:a.path==='env'?'export const env=globalThis.__discoveryEnv':'export function inspectCover(){throw Error("No media") }'}));
 }}]});
-const {search,changeSettings,facets,coverResponse,changeReference}=await import(`data:text/javascript;base64,${Buffer.from(browserBundle.outputFiles[0].text).toString('base64')}`);
+const {search,changeSettings,facets,coverResponse,changeReference,transcriptionResponse}=await import(`data:text/javascript;base64,${Buffer.from(browserBundle.outputFiles[0].text).toString('base64')}`);
 const headers=new Headers({'oai-authenticated-user-id':'fixture_owner','oai-authenticated-user-email':'fixture@example.test'});
 let lease,tax;
 const base=()=>({contract_version:'1.0.0',request_id:crypto.randomUUID(),run_id:lease.run_id,lease_epoch:lease.lease_epoch});
@@ -339,4 +339,56 @@ test('versioned covers permit private browser reuse and still require owner auth
     const updated=await changeReference({id,expected_revision:first.items[0].revision,action:'remove'},headers);
     assert.notEqual(updated.item.cover_url,first.items[0].cover_url);
   }finally{delete globalThis.__discoveryEnv.BUCKET;await finish();}
+});
+
+
+test('transcript copying returns only available languages and keeps texts out of search results',async()=>{
+  resetInstallation();await acquire();
+  const added=await call('register_sources',{...base(),sources:[source('COPY_TRANSCRIPT')]});
+  const id=added.items[0].reference.reference_id;
+  const original='Private original.\nKeep the second line.';
+  const portuguese='Original privado.\nPreserve a segunda linha.';
+  const content=(text,pt,state='translated')=>({content_version:'1.2.0',caption:'private caption',transcription:text,transcription_pt:pt,availability:{transcription:text===null?'unavailable':text===''?'absent':'observed',transcription_pt:state},semantic_description:'private analysis'});
+  const cases=[
+    [content(original,portuguese),[{id:'original',label:'Idioma original',text:original},{id:'pt',label:'Português',text:portuguese}]],
+    [content(portuguese,portuguese,'original'),[{id:'pt',label:'Português',text:portuguese}]],
+    [content(original,null,'unavailable'),[{id:'original',label:'Idioma original',text:original}]],
+    [content(null,portuguese),[{id:'pt',label:'Português',text:portuguese}]],
+    [content(portuguese,portuguese),[{id:'pt',label:'Português',text:portuguese}]],
+    [content('','','absent'),[]],
+    [content(null,null,'unavailable'),[]],
+    [content('   ',null,'unavailable'),[]],
+    [null,[]],
+    [{analysis_version:'1.0.0',transcript_language:'en',inspection:{speech:'observed'},transcript:[{text:'   '}]},[]],
+    [{analysis_version:'1.0.0',transcript_language:'en',inspection:{speech:'observed'},transcript:[{text:'First line'},{text:'Second line'}]},[{id:'original',label:'Idioma original',text:'First line\nSecond line'}]],
+    [{analysis_version:'1.0.0',transcript_language:'pt-BR',inspection:{speech:'observed'},transcript:[{text:portuguese}]},[{id:'original',label:'Português',text:portuguese}]],
+    [{analysis_version:'1.0.0',transcript_language:null,inspection:{speech:'unavailable'},transcript:[]},[]]
+  ];
+  for(const [stored,expected] of cases){
+    db.prepare('UPDATE "references" SET analysis=? WHERE id=?').run(stored?JSON.stringify(stored):null,id);
+    const response=await transcriptionResponse(id,headers);
+    assert.equal(response.headers.get('Cache-Control'),'private, no-store');
+    assert.deepEqual(await response.json(),{items:expected});
+    const result=await search({query:'',filters:{category:[],topic:[],creator:[],collection:[]},order:'recent',removed:false,cursor:null},headers);
+    assert.equal(result.items[0].has_transcription,expected.length>0);
+    for(const key of ['analysis','content','transcription','transcription_pt'])assert.equal(Object.hasOwn(result.items[0],key),false);
+    assert(!JSON.stringify(result).includes('Private original'));
+  }
+  db.prepare('UPDATE "references" SET analysis=? WHERE id=?').run(JSON.stringify(content(original,portuguese)),id);
+  const removed=await changeReference({id,expected_revision:1,action:'remove'},headers);
+  assert.equal(removed.item.has_transcription,true);
+  assert.equal((await (await transcriptionResponse(id,headers)).json()).items.length,2);
+  await finish();
+});
+
+test('private transcript reads reject missing identity, other users, and foreign references',async()=>{
+  resetInstallation();await acquire();
+  const added=await call('register_sources',{...base(),sources:[source('PRIVATE_TRANSCRIPT')]});
+  const id=added.items[0].reference.reference_id;
+  await assert.rejects(transcriptionResponse(id,new Headers()),e=>e.code==='UNAUTHENTICATED');
+  await assert.rejects(transcriptionResponse(id,new Headers({'oai-authenticated-user-id':'other','oai-authenticated-user-email':'other@example.test'})),e=>e.code==='FORBIDDEN');
+  await assert.rejects(transcriptionResponse('missing-reference',headers),e=>e.code==='NOT_FOUND');
+  db.prepare('UPDATE "references" SET owner_id=? WHERE id=?').run('other',id);
+  await assert.rejects(transcriptionResponse(id,headers),e=>e.code==='NOT_FOUND');
+  await finish();
 });

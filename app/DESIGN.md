@@ -270,3 +270,13 @@ Use private browser caching for versioned covers. Keep the existing cover dimens
 
 Keep 64px of bottom padding on desktop and 48px below 650px. Add the device safe-area inset.
 Keep this padding on the workspace when pagination ends.
+
+### Transcript copying
+
+Each card has a copy button beside its action menu. The button is disabled when no transcript exists.
+Open a menu with the available original and Portuguese versions. Show one Portuguese option when the original is Portuguese.
+Load the text only when the menu opens. Keep transcript text out of the card and search response.
+Preserve line breaks when copying. Close the menu and show Transcrição copiada after a successful copy.
+Use the shared five-second notification timer. Keep a failed menu request open with an explicit retry action.
+Keep a failed clipboard operation open with an error message. Return keyboard focus to the copy button when the menu closes.
+Use 44px mobile targets and a 16px viewport inset for the menu.

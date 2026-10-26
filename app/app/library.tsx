@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Dialog, Popover, DropdownMenu } from "radix-ui";
-import { Bookmark, Search, LayoutGrid, Trash2, Settings2, ArrowRight, ArrowUpRight, Play, X, ChevronDown, Check, MoreHorizontal, Pencil, RotateCcw, SlidersHorizontal, LoaderCircle, LogOut } from "lucide-react";
+import { Bookmark, Search, LayoutGrid, Trash2, Settings2, ArrowRight, ArrowUpRight, Play, X, ChevronDown, Check, MoreHorizontal, Pencil, RotateCcw, SlidersHorizontal, LoaderCircle, LogOut, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +13,7 @@ import { UpdateNotice } from "@/components/update-notice";
 type Option={id:string;label:string};
 type Group="category"|"topic"|"creator"|"collection";
 type Selected=Record<Group,Option[]>;
-type Reel={id:string;revision:number;creator:string|null;source_url:string;cover_url:string|null;saved_at:string;categories:Option[];topics:Option[];category_ids:string[];topic_ids:string[];outcome:string;removed:boolean};
+type Reel={id:string;revision:number;creator:string|null;source_url:string;cover_url:string|null;saved_at:string;categories:Option[];topics:Option[];category_ids:string[];topic_ids:string[];outcome:string;removed:boolean;has_transcription:boolean};
 const blank:Selected={category:[],topic:[],creator:[],collection:[]};
 const labels:Record<Group,string>={category:"Categoria",topic:"Tópico",creator:"Criador",collection:"Coleção"};
 const plural:Record<Group,string>={category:"Categorias",topic:"Tópicos",creator:"Criadores",collection:"Coleções"};
@@ -63,7 +63,37 @@ function FilterPicker({group,values,onChange}: {group:Group;values:Option[];onCh
   return mobile?<Dialog.Root open={open} onOpenChange={close}><Dialog.Trigger asChild>{trigger}</Dialog.Trigger><Dialog.Portal><Dialog.Overlay className="sheet-overlay"/><Dialog.Content className="picker-sheet" aria-describedby={undefined} onOpenAutoFocus={e=>{e.preventDefault();search.current?.focus();}}>{content}</Dialog.Content></Dialog.Portal></Dialog.Root>:<Popover.Root open={open} onOpenChange={close}><Popover.Trigger asChild>{trigger}</Popover.Trigger><Popover.Portal><Popover.Content className="picker-popover" sideOffset={10} align="center" onOpenAutoFocus={e=>{e.preventDefault();search.current?.focus();}}>{content}</Popover.Content></Popover.Portal></Popover.Root>;
 }
 
-function ReelCard({reel,priority,disabled,onChange,onEdit,onPlay}: {reel:Reel;priority:boolean;disabled:boolean;onChange:(reel:Reel,action:string)=>void;onEdit:()=>void;onPlay:()=>void}) {
+type Transcript={id:string;label:string;text:string};
+function TranscriptMenu({reel,disabled,onNotice}:{reel:Reel;disabled:boolean;onNotice:(message:string)=>void}) {
+  const [open,setOpen]=React.useState(false),[items,setItems]=React.useState<Transcript[]|null>(null),[error,setError]=React.useState(""),[retry,setRetry]=React.useState(0),[copying,setCopying]=React.useState(false);
+  React.useEffect(()=>{
+    if(!open)return;
+    const controller=new AbortController();setItems(null);setError("");
+    api(`/api/transcriptions/${encodeURIComponent(reel.id)}`,{signal:controller.signal}).then(data=>{if(!controller.signal.aborted)setItems(data.items);}).catch(e=>{if(!controller.signal.aborted)setError(e.message);});
+    return()=>controller.abort();
+  },[open,reel.id,reel.revision,retry]);
+  const copy=async(text:string)=>{
+    if(copying)return;
+    setCopying(true);setError("");
+    try{await navigator.clipboard.writeText(text);setOpen(false);onNotice("Transcrição copiada");}
+    catch{setError("Não foi possível copiar. Tente novamente.");}
+    finally{setCopying(false);}
+  };
+  return <DropdownMenu.Root open={open} onOpenChange={setOpen}>
+    <DropdownMenu.Trigger asChild><Button className="transcript-trigger" variant="ghost" size="icon" disabled={disabled||!reel.has_transcription}
+      aria-label={`Copiar transcrição de ${reel.creator??"referência"}`} title={reel.has_transcription?"Copiar transcrição":"Transcrição indisponível"}><Copy size={16}/></Button></DropdownMenu.Trigger>
+    <DropdownMenu.Portal><DropdownMenu.Content className="card-menu-content transcript-menu" align="end" sideOffset={4} collisionPadding={16}>
+      <DropdownMenu.Label className="transcript-menu-label">Copiar transcrição</DropdownMenu.Label>
+      {error&&<p className="transcript-status" role="alert">{error}</p>}
+      {!items&&!error&&<p className="transcript-status" role="status"><LoaderCircle size={15} className="loading-icon"/>Carregando</p>}
+      {!items&&error&&<DropdownMenu.Item onSelect={event=>{event.preventDefault();setRetry(value=>value+1);}}>Tentar novamente</DropdownMenu.Item>}
+      {items?.length===0&&<p className="transcript-status" role="status">Transcrição indisponível</p>}
+      {items?.map(item=><DropdownMenu.Item key={item.id} disabled={copying} onSelect={event=>{event.preventDefault();void copy(item.text);}}><Copy size={14}/>{item.label}</DropdownMenu.Item>)}
+    </DropdownMenu.Content></DropdownMenu.Portal>
+  </DropdownMenu.Root>;
+}
+
+function ReelCard({reel,priority,disabled,onChange,onEdit,onPlay,onNotice}: {reel:Reel;priority:boolean;disabled:boolean;onNotice:(message:string)=>void;onChange:(reel:Reel,action:string)=>void;onEdit:()=>void;onPlay:()=>void}) {
   const initials=(reel.creator??"?").replace(/^@/,"").slice(0,2).toUpperCase();
   return <article className="reel-card" data-testid="reel" data-reference-id={reel.id} data-creator={reel.creator}>
     <div className="cover-frame">
@@ -74,10 +104,10 @@ function ReelCard({reel,priority,disabled,onChange,onEdit,onPlay}: {reel:Reel;pr
       <button className="cover-open" onClick={onPlay} aria-label={`Reproduzir Reel de ${reel.creator??"criador"}`}><span className="cover-play" aria-hidden="true"><Play size={16} fill="currentColor"/></span></button>
       <a className="cover-source" href={reel.source_url} target="_blank" rel="noopener noreferrer" aria-label={`Abrir Reel de ${reel.creator??"criador"} no Instagram`}><ArrowUpRight size={16}/></a>
     </div>
-    <div className="creator-row"><span className="creator-avatar blue" aria-hidden="true">{initials}</span><h2>{reel.creator??"Criador"}</h2><DropdownMenu.Root><DropdownMenu.Trigger asChild><Button className="card-menu" disabled={disabled} variant="ghost" size="icon" aria-label={`Opções de ${reel.creator??"referência"}`}><MoreHorizontal size={17}/></Button></DropdownMenu.Trigger><DropdownMenu.Portal><DropdownMenu.Content className="card-menu-content" align="end" sideOffset={4}>
+    <div className="creator-row"><span className="creator-avatar blue" aria-hidden="true">{initials}</span><h2>{reel.creator??"Criador"}</h2><div className="card-actions"><TranscriptMenu reel={reel} disabled={disabled} onNotice={onNotice}/><DropdownMenu.Root><DropdownMenu.Trigger asChild><Button className="card-menu" disabled={disabled} variant="ghost" size="icon" aria-label={`Opções de ${reel.creator??"referência"}`}><MoreHorizontal size={17}/></Button></DropdownMenu.Trigger><DropdownMenu.Portal><DropdownMenu.Content className="card-menu-content" align="end" sideOffset={4}>
       {!reel.removed&&<DropdownMenu.Item onSelect={onEdit}><Pencil size={14}/>Classificar</DropdownMenu.Item>}
       <DropdownMenu.Item onSelect={()=>onChange(reel,reel.removed?"restore":"remove")}>{reel.removed?<RotateCcw size={14}/>:<Trash2 size={14}/>} {reel.removed?"Restaurar":"Remover"}</DropdownMenu.Item>
-    </DropdownMenu.Content></DropdownMenu.Portal></DropdownMenu.Root></div>
+    </DropdownMenu.Content></DropdownMenu.Portal></DropdownMenu.Root></div></div>
     <div className="card-labels">{reel.categories.map((value,index)=><Badge key={value.id} className={`category-badge ${["blue","cyan","lavender","indigo"][index%4]}`}>{value.label}</Badge>)}{reel.topics.map(value=><span key={value.id} className="topic-label">{value.label}</span>)}</div>
     <time className="saved-date" dateTime={reel.saved_at}>{new Intl.DateTimeFormat("pt-BR",{day:"numeric",month:"short"}).format(new Date(reel.saved_at))}</time>
   </article>;
@@ -206,7 +236,7 @@ export default function Library({initial}:{initial:string}) {
           </SelectContent>
         </Select>
       </div>
-      {sessionError||failure?<section className="empty-state" role="alert"><h2>Não foi possível carregar</h2><Button className="reset-button" onClick={()=>{setSessionError(false);setRevision(v=>v+1);}}>Tentar novamente</Button></section>:!session?.connected&&!loading?<section className="empty-state"><div className="empty-symbol"><Bookmark size={28}/></div><h2>Conexão pendente</h2><Button className="reset-button" onClick={()=>setRevision(v=>v+1)}>Atualizar</Button></section>:loading&&result.items.length===0?<section className="empty-state" aria-busy="true"><LoaderCircle className="loading-icon" size={24}/></section>:result.items.length?<section ref={grid} className="reel-grid" aria-label={removed?"Referências removidas":"Referências"} aria-busy={loading}>{result.items.map((reel,index)=><ReelCard key={reel.id} reel={reel} priority={index<5} disabled={busy||(loading&&!pageRequest.current)} onChange={change} onEdit={()=>edit(reel)} onPlay={()=>setPlaying(reel)}/>)}</section>:<section className="empty-state"><div className="empty-symbol"><Bookmark size={28}/></div><h2>{active?"Nenhum resultado":removed?"Nenhuma referência removida":"Nenhuma referência"}</h2>{active&&<Button className="reset-button" onClick={clear}>Limpar filtros</Button>}</section>}
+      {sessionError||failure?<section className="empty-state" role="alert"><h2>Não foi possível carregar</h2><Button className="reset-button" onClick={()=>{setSessionError(false);setRevision(v=>v+1);}}>Tentar novamente</Button></section>:!session?.connected&&!loading?<section className="empty-state"><div className="empty-symbol"><Bookmark size={28}/></div><h2>Conexão pendente</h2><Button className="reset-button" onClick={()=>setRevision(v=>v+1)}>Atualizar</Button></section>:loading&&result.items.length===0?<section className="empty-state" aria-busy="true"><LoaderCircle className="loading-icon" size={24}/></section>:result.items.length?<section ref={grid} className="reel-grid" aria-label={removed?"Referências removidas":"Referências"} aria-busy={loading}>{result.items.map((reel,index)=><ReelCard key={reel.id} reel={reel} priority={index<5} disabled={busy||(loading&&!pageRequest.current)} onChange={change} onEdit={()=>edit(reel)} onPlay={()=>setPlaying(reel)} onNotice={showNotice}/>)}</section>:<section className="empty-state"><div className="empty-symbol"><Bookmark size={28}/></div><h2>{active?"Nenhum resultado":removed?"Nenhuma referência removida":"Nenhuma referência"}</h2>{active&&<Button className="reset-button" onClick={clear}>Limpar filtros</Button>}</section>}
       {result.cursor&&!failure&&!sessionError&&<div ref={sentinel} className="library-more" aria-live="polite">{pageFailure?<div><p>Não foi possível carregar mais referências.</p><Button onClick={()=>void loadMore().catch(()=>{})}>Tentar novamente</Button></div>:loading?<p className="picker-status" role="status"><LoaderCircle size={16} className="loading-icon"/>Carregando mais referências</p>:null}</div>}
     </main></div>
     {notice&&<div className="notification" role="status"><span>{notice.message}</span><Button variant="ghost" size="icon" aria-label="Fechar aviso" onClick={()=>setNotice(null)}><X size={17}/></Button></div>}

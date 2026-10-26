@@ -2,6 +2,25 @@ import { env } from "cloudflare:workers";
 import { all, authorize, commit, database, installation, reference, settings, searchText, VERSION } from "./store";
 import { AppError, canonical, normalize, readBody, sha256 } from "./validation";
 
+function transcriptOptions(content:any) {
+  if(!content)return [];
+  const available=(value:unknown):value is string=>typeof value==="string"&&!!value.trim();
+  if(!content.content_version){
+    const text=content.inspection?.speech==="observed"?(content.transcript??[]).map((part:any)=>part.text).filter(available).join("\n"):"";
+    return available(text)?[{id:"original",label:/^pt(?:-|$)/i.test(content.transcript_language??"")?"Português":"Idioma original",text}]:[];
+  }
+  const original=content.availability?.transcription==="observed"&&available(content.transcription)?content.transcription:null;
+  const portuguese=["original","translated"].includes(content.availability?.transcription_pt)&&available(content.transcription_pt)?content.transcription_pt:null;
+  if(portuguese&&(content.availability.transcription_pt==="original"||original?.trim()===portuguese.trim()))return [{id:"pt",label:"Português",text:portuguese}];
+  return [...(original?[{id:"original",label:"Idioma original",text:original}]:[]),...(portuguese?[{id:"pt",label:"Português",text:portuguese}]:[])];
+}
+
+export async function transcriptionResponse(id:string,headers:Headers) {
+  const owner=await authorize(headers);
+  const row=await reference(id,owner.id);
+  return Response.json({items:transcriptOptions(row.analysis?JSON.parse(row.analysis):null)},{headers:{"Cache-Control":"private, no-store"}});
+}
+
 export function publicReference(row: any, taxonomy: any) {
   const classification = JSON.parse(row.classification);
   return { id:row.id, revision:row.revision, source_url:row.source_url, creator:row.creator,
@@ -9,6 +28,7 @@ export function publicReference(row: any, taxonomy: any) {
     categories:taxonomy.categories.filter((t:any)=>classification.category_ids.includes(t.id)),
     topics:taxonomy.topics.filter((t:any)=>classification.topic_ids.includes(t.id)),
     collection_ids:JSON.parse(row.collections), outcome:row.outcome, removed:!!row.removed,
+    has_transcription:row.has_transcription!==undefined?!!row.has_transcription:transcriptOptions(row.analysis?JSON.parse(row.analysis):null).length>0,
     cover_url:row.cover_key?`/api/covers/${row.id}?v=${row.revision}`:null };
 }
 
@@ -56,7 +76,10 @@ export async function search(body: any, headers: Headers) {
   }
   const where=clauses.join(" AND ");
   const count=await database().prepare(`SELECT count(*) AS count FROM "references" WHERE ${where}`).bind(...args).first<any>();
-  const columns="id,revision,source_url,creator,saved_at,discovered_at,classification,collections,outcome,removed,cover_key";
+  const columns=`id,revision,source_url,creator,saved_at,discovered_at,classification,collections,outcome,removed,cover_key,
+    coalesce((json_extract(analysis,'$.availability.transcription')='observed' AND length(trim(json_extract(analysis,'$.transcription')))>0)
+    OR (json_extract(analysis,'$.availability.transcription_pt') IN ('original','translated') AND length(trim(json_extract(analysis,'$.transcription_pt')))>0)
+    OR (json_extract(analysis,'$.inspection.speech')='observed' AND EXISTS(SELECT 1 FROM json_each(analysis,'$.transcript') WHERE length(trim(json_extract(value,'$.text')))>0)),0) AS has_transcription`;
   const rank=words.length && body.order==="best" ? "(SELECT sum(CASE WHEN instr(lower(coalesce(creator,'')),value)>0 THEN 5 ELSE 1 END) FROM json_each(?))" : "0";
   const rankArgs=words.length && body.order==="best"?[JSON.stringify(words)]:[];
   const records=await all(`SELECT ${columns},(${rank}) AS rank FROM "references" WHERE ${where} ORDER BY rank DESC,coalesce(saved_at,discovered_at) DESC,id LIMIT 51 OFFSET ?`,[...rankArgs,...args,offset]);
