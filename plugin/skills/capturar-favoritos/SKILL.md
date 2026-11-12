@@ -6,16 +6,17 @@ description: Captura os Reels salvos do Instagram para o shōu, um por vez, com 
 # Capturar favoritos
 
 Execute somente no Work pelo aplicativo do ChatGPT no seu celular e na instalação escolhida pela pessoa.
-Leia get_runtime com file=workflow.txt. Exija runtime 1.7.5 ou uma versão compatível posterior.
+Leia get_runtime com file=workflow.txt. Exija runtime 1.8.0 ou uma versão compatível posterior.
 Adquira start_run com mode=acquire e pending_cursor=null.
 Use trigger=scheduled somente quando o host identificar uma ocorrência agendada.
 Use trigger=manual para uma mensagem da pessoa ou um teste manual.
 
-Use [processar-pendente](../processar-pendente/SKILL.md) primeiro, com a lease atual.
-Percorra toda a fila elegível existente antes de verificar novos Salvos, percorrer coleções ou registrar descobertas.
+Verifique a primeira página dos Salvos em cada lista selecionada antes das tentativas antigas.
+Registre os novos Reels com register_sources sem substituir a âncora da descoberta. Processe esses novos itens primeiro.
+Depois atualize a fila com start_run mode=renew e pending_cursor=null. Use [processar-pendente](../processar-pendente/SKILL.md) com a lease atual.
 Não espere itens com retry_at futuro nem repita tentativas desta execução.
-Ignore identidades baseline_only. Inicie o levantamento quando não houver pendentes elegíveis.
-Somente então confirme o acesso aos Salvos no navegador remoto. Use autenticar se o login for necessário.
+Ignore identidades baseline_only. Retome a descoberta profunda depois da fila elegível.
+Confirme o acesso aos Salvos na verificação inicial. Uma falha de acesso não impede o enriquecimento permitido dos itens existentes.
 
 Continue até concluir as listas selecionadas e tentar todos os itens elegíveis.
 Não transforme uma página, um lote ou alguns itens bem-sucedidos em uma condição de conclusão.
@@ -52,7 +53,9 @@ Use a próxima ocorrência de uma tarefa autorizada para retomar o trabalho rest
 Não invente um agendamento nem prometa uma nova execução sem um gatilho confirmado.
 Uma interrupção não significa que a biblioteca está completa.
 
-Ao terminar, informe o run_id, started_at, o resultado de finish_run e as pendências restantes.
+Em RUN_BUSY, leia get_run_status com run_id=null e acompanhe o run_id retornado. Não altere a lease de outra execução.
+Ao terminar, leia get_run_status com o próprio run_id. Informe horários, resultado e contagens persistidas dessa execução.
+Informe progresso quando active=true. Não apresente uma execução ativa como concluída.
 Diferencie itens processados nesta execução das contagens totais da biblioteca.
 Informe a próxima execução somente quando houver uma tarefa e um horário confirmados.
 

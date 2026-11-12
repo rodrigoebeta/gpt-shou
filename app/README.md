@@ -2,7 +2,7 @@
 
 ## Cloud runtime
 
-The authenticated get_runtime tool supplies cloud runtime 1.7.5 and its workflow through the Site's native plugin.
+The authenticated get_runtime tool supplies cloud runtime 1.8.0 and its workflow through the Site's native plugin.
 The manifest includes a compressed archive and an offline Python materializer with independent SHA256 checks.
 Materialize the exact six files before the bootstrap. Never regenerate package-lock.json or fetch source from the private Site through the shell.
 The cloud task retrieves and verifies its source files on each run. It requires no task attachment or local files.
@@ -22,7 +22,17 @@ Semantic text joins the existing keyword index and remains backend-only.
 Historical content 1.0.0 and 1.1.0 remain readable. Update installed task prompts before they submit new content.
 Verify acquisition, transcription, visual inspection, and scheduled execution in each installation's remote Work environment.
 The runtime requires Linux x86_64, Python with venv, FFmpeg, ffprobe, and access to its package and model sources.
-The transcription helper accepts at most 100 MB and 600 seconds. Empty recognition output remains unavailable.
+The transcription helper accepts at most 100 MB and 600 seconds.
+Empty recognition starts an automatic full-audio check. The check includes singing, quiet speech, and the final audio segment.
+The helper uses the pinned Qualcomm YAMNet ONNX model with the existing NumPy and ONNX Runtime dependencies.
+It downloads the model inside the temporary workspace and verifies its SHA256 digest. It sends no media to a model service.
+Low voice scores and strong music or silence evidence produce an absent transcript. Uncertain audio receives one more transcription pass.
+The Work model checks remaining uncertain audio when a full-audio tool is available. Do not assign a manual review queue to the owner.
+Classification is probabilistic. Preserve unavailable status when the automatic checks cannot establish the speech state.
+Check the first page of new saves before old retries. Keep the deeper discovery checkpoint intact.
+Analysis failures receive delays of 1, 2, 4, and then 7 days. New saves remain eligible during these delays.
+Use get_run_status for the actual capture run, including after RUN_BUSY. Its counts describe committed work, not library totals.
+Update existing scheduled prompts from the current plugin template. A source update does not replace an installed task prompt.
 Compare the transcription media digest with the acquisition digest before saving content.
 Keep one browser tab on Saved, with its pagination and scroll position intact.
 Read stored content before processing a pending item. Open an item tab only when necessary information requires browser inspection.

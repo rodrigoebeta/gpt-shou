@@ -12,7 +12,10 @@ const base=fileURLToPath(new URL('../../.cache/shoubox/materialize-tests/',impor
 mkdirSync(base,{recursive:true});
 const directory=mkdtempSync(join(base,'case-'));
 const hash=bytes=>createHash('sha256').update(bytes).digest('hex');
-function run(target,content=bundle.archive.content,digest=bundle.archive.sha256){return spawnSync(process.env.SHOUBOX_TEST_PYTHON||'python',[materializer,join(directory,target),content,digest],{encoding:'utf8',timeout:10000,env:{...process.env,PYTHONDONTWRITEBYTECODE:'1'}});}
+function run(target,content=bundle.archive.content,digest=bundle.archive.sha256){
+  // Windows limits command-line length; deliver the fixture through stdin without changing the runtime CLI.
+  return spawnSync(process.env.SHOUBOX_TEST_PYTHON||'python',['-c','import json,runpy,sys; sys.argv=json.load(sys.stdin); runpy.run_path(sys.argv[0],run_name="__main__")'],{input:JSON.stringify([materializer,join(directory,target),content,digest]),encoding:'utf8',timeout:10000,env:{...process.env,PYTHONDONTWRITEBYTECODE:'1'}});
+}
 test('offline materialization preserves all six original files and the lockfile byte for byte',()=>{
   const result=run('valid');assert.equal(result.status,0,result.stderr);
   assert.equal(JSON.parse(result.stdout).files_verified,6);assert.equal(JSON.parse(result.stdout).network_used,false);

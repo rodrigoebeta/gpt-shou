@@ -1,5 +1,6 @@
 """Prepare and test speech transcription only inside a remote Work task started through the ChatGPT mobile app."""
 import hashlib
+import io
 import importlib.metadata
 import json
 import math
@@ -9,6 +10,7 @@ import platform
 import re
 import subprocess
 import sys
+import zipfile
 from urllib.parse import urlsplit
 
 MODEL = "Systran/faster-whisper-small"
@@ -18,11 +20,14 @@ HUB_VERSION = "0.34.4"
 REQUESTS_VERSION = "2.32.5"
 DEPENDENCIES = ["faster-whisper==" + VERSION, "huggingface-hub==" + HUB_VERSION, "requests[socks]==" + REQUESTS_VERSION]
 MODEL_FILES = ["config.json", "tokenizer.json", "vocabulary.txt", "model.bin"]
+SOUND_URL = "https://qaihub-public-assets.s3.us-west-2.amazonaws.com/qai-hub-models/models/yamnet/releases/v0.59.0/yamnet-onnx-float.zip"
+SOUND_SHA256 = "bda628207418bc59b6a371aef6180b53367707eaf7b8b8a7c683417000d1eea4"
 DIAGNOSTIC_MODULES = {"huggingface_hub", "hf_xet", "httpx", "httpx2", "httpcore", "httpcore2", "requests", "urllib3", "certifi", "socks", "socksio", "h2", "h11", "sniffio", "anyio", "truststore", "typing_extensions", "faster_whisper", "ctranslate2", "numpy", "av", "onnxruntime", "tokenizers", "brotli", "brotlicffi", "zstandard"}
 ERROR_TYPES = {"CalledProcessError", "TimeoutExpired", "TimeoutError", "ModuleNotFoundError", "ImportError", "FileNotFoundError", "PermissionError", "OSError", "RuntimeError", "ValueError", "ConnectionError", "ProxyError", "SSLError", "SSLCertVerificationError", "ConnectError", "ReadTimeout", "ConnectTimeout", "RemoteProtocolError", "MaxRetryError", "HfHubHTTPError", "LocalEntryNotFoundError", "EntryNotFoundError", "RevisionNotFoundError", "RepositoryNotFoundError", "GatedRepoError", "HFValidationError", "OfflineModeIsEnabled", "gaierror"}
 ERROR_CODES = {"DNS_FAILED", "TLS_CERTIFICATE", "CONNECTION_REFUSED", "NETWORK_TIMEOUT", "IMPORT_MISSING", "OUT_OF_MEMORY", "XET_ERROR"}
 ERROR_TYPES |= {"KeyError", "AttributeError", "TypeError", "IndexError", "AssertionError", "NotImplementedError", "MemoryError", "JSONDecodeError", "InvalidDataError", "FFmpegError"}
 ASR_STAGES = {"asr_ffprobe", "asr_metadata", "asr_engine_imports", "asr_model_load", "asr_audio_decode", "asr_transcribe", "asr_segments", "asr_media_hash", "asr_runtime"}
+ASR_STAGES |= {"asr_sound_model", "asr_audio_classification", "asr_second_pass"}
 DIAGNOSTIC_ROOTS = DIAGNOSTIC_MODULES | {"builtins", "subprocess", "json", "socket", "_ssl", "ctypes", "multiprocessing", "concurrent", "__main__"}
 
 
@@ -201,6 +206,91 @@ def speech_result(segments, info):
     return {"transcription": text if text else None, "availability": "observed" if text else "unavailable", "language": info.language, "language_probability": float(info.language_probability), "duration_seconds": float(info.duration), "speech_detected": bool(text)}
 
 
+def prepare_sound_model(directory):
+    import requests
+    directory.mkdir(parents=True, exist_ok=True)
+    archive = directory / "model.zip"
+    if not archive.is_file() or hashlib.sha256(archive.read_bytes()).hexdigest() != SOUND_SHA256:
+        payload = bytearray()
+        with requests.get(SOUND_URL, stream=True, timeout=(20, 60)) as response:
+            response.raise_for_status()
+            for chunk in response.iter_content(65536):
+                payload.extend(chunk)
+                if len(payload) > 20_000_000:
+                    raise ValueError("Oversized sound model")
+        if hashlib.sha256(payload).hexdigest() != SOUND_SHA256:
+            raise ValueError("Sound model checksum mismatch")
+        archive.write_bytes(payload)
+    with zipfile.ZipFile(io.BytesIO(archive.read_bytes())) as bundle:
+        for name in ["yamnet.onnx", "yamnet.data"]:
+            (directory / name).write_bytes(bundle.read("yamnet-onnx-float/" + name))
+
+
+def audio_windows(samples):
+    # Include the tail, even when it contains less than one model window.
+    return range(0, max(1, samples - 15600 + 7680), 7680)
+
+
+def no_speech_decision(voice_max, amplified_voice_max, background_mean):
+    return voice_max < 0.1 and amplified_voice_max < 0.5 and background_mean >= 0.8
+
+
+def classify_audio(audio, model):
+    import numpy as np
+    import onnxruntime as ort
+    if not len(audio) or len(audio) > 600 * 16000 or not np.isfinite(audio).all():
+        raise ValueError("Invalid classifier audio")
+    options = ort.SessionOptions()
+    options.intra_op_num_threads = 2
+    session = ort.InferenceSession(str(model / "yamnet.onnx"), options, providers=["CPUExecutionProvider"])
+    # HTK mel filters and centered Hann STFT match the model publisher's input contract.
+    hz = np.linspace(0, 8000, 257)[:, None]
+    edges = 700 * (10 ** (np.linspace(2595 * np.log10(1 + 125 / 700), 2595 * np.log10(1 + 7500 / 700), 66) / 2595) - 1)
+    filters = np.maximum(0, np.minimum((hz - edges[:-2]) / np.diff(edges)[:-1], (edges[2:] - hz) / np.diff(edges)[1:]))
+    window = np.pad(np.hanning(401)[:-1], (56, 56))
+    maxima, amplified, backgrounds = [], [], []
+    for offset in audio_windows(len(audio)):
+        clip = audio[offset:offset + 15600]
+        clip = np.pad(clip, (0, max(0, 15600 - len(clip))))
+        frames = np.lib.stride_tricks.sliding_window_view(np.pad(clip, (256, 256), mode="reflect"), 512)[::160][:96]
+        magnitude = np.abs(np.fft.rfft(frames * window, axis=1)) @ filters
+
+        def predict(gain):
+            features = np.log(magnitude * gain + 0.001).astype(np.float32)[None, None]
+            logits = session.run(None, {"audio": features})[0][0]
+            if logits.shape != (521,) or not np.isfinite(logits).all():
+                raise ValueError("Invalid sound classification")
+            return 1 / (1 + np.exp(-np.clip(logits, -80, 80)))
+
+        scores = predict(1)
+        # Include singing and rap. Quiet speech must survive a second, amplified check.
+        maxima.append(float(scores[:33].max()))
+        peak = float(np.max(np.abs(clip)))
+        amplified.append(float(predict(0.8 / peak)[:33].max()) if 0 < peak < 0.1 else maxima[-1])
+        backgrounds.append(float(max(scores[132], scores[494])))
+    result = {"model": "yamnet-v0.59.0", "windows": len(maxima), "covered_audio_samples": len(audio),
+              "voice_max": max(maxima), "amplified_voice_max": max(amplified), "background_mean": float(np.mean(backgrounds))}
+    result["no_speech"] = no_speech_decision(result["voice_max"], result["amplified_voice_max"], result["background_mean"])
+    return result
+
+
+def resolve_empty_speech(result, audio, sound_model, engine):
+    if result["availability"] == "observed":
+        return result
+    evidence = stage("asr_audio_classification", lambda: classify_audio(audio, sound_model))
+    if evidence["no_speech"]:
+        return {**result, "transcription": "", "availability": "absent", "language": None,
+                "language_probability": None, "absence_evidence": "full_audio_classification", "audio_classification": evidence}
+    # A lower VAD threshold recovers quiet speech without decoding silence into invented words.
+    def retry():
+        peak = float(abs(audio).max())
+        boosted = audio * (0.8 / peak) if 0 < peak < 0.1 else audio
+        segments, info = engine.transcribe(boosted, task="transcribe", beam_size=5, vad_filter=True,
+                                          vad_parameters={"threshold": 0.2, "min_speech_duration_ms": 100}, condition_on_previous_text=False)
+        return speech_result(segments, info)
+    return {**stage("asr_second_pass", retry), "audio_classification": evidence}
+
+
 def validate_versions(packages):
     expected = {"faster-whisper": VERSION, "huggingface-hub": HUB_VERSION, "requests": REQUESTS_VERSION}
     if any(packages.get(name) != version for name, version in expected.items()):
@@ -262,6 +352,7 @@ def main():
         from huggingface_hub import hf_hub_download
         for name in MODEL_FILES:
             stage("asr_file_" + name, lambda name=name: hf_hub_download(repo_id=MODEL, filename=name, revision=REVISION, local_dir=str(model), token=False))
+        stage("asr_sound_model", lambda: prepare_sound_model(state / "sound-model"))
         return
     path = Path(sys.argv[1]).resolve()
     if not path.is_file() or path.stat().st_size > 100_000_000:
@@ -299,6 +390,7 @@ def main():
     audio = np.frombuffer(pcm, dtype="<i2").astype(np.float32) / 32768.0
     segments, info = stage("asr_transcribe", lambda: engine.transcribe(audio, task="transcribe", beam_size=5, vad_filter=True, condition_on_previous_text=False))
     result = stage("asr_segments", lambda: speech_result(segments, info))
+    result = resolve_empty_speech(result, audio, state / "sound-model", engine)
 
     digest = stage("asr_media_hash", media_digest)
     print(json.dumps({"ok": True, "probe_version": "1.1.0", "execution": "work-cloud", "model": MODEL, "model_revision": REVISION, "faster_whisper_version": VERSION, "audio_decoder": "ffmpeg", "audio_sample_rate": 16000, "decoded_audio_samples": len(pcm) // 2, "media_sha256": digest, "verified_container_duration_seconds": duration, **result}, ensure_ascii=False), flush=True)

@@ -16,6 +16,35 @@ spec.loader.exec_module(probe)
 
 
 class ProbeTests(unittest.TestCase):
+    def test_audio_windows_cover_every_sample_including_short_tails(self):
+        for samples in [1, 100, 15600, 15601, 16000, 31 * 16000, 600 * 16000]:
+            offsets = list(probe.audio_windows(samples))
+            self.assertEqual(offsets[0], 0)
+            self.assertLess(offsets[-1], samples)
+            self.assertGreaterEqual(offsets[-1] + 15600, samples)
+            self.assertTrue(all(right - left <= 15600 for left, right in zip(offsets, offsets[1:])))
+
+    def test_no_speech_requires_background_and_both_voice_checks(self):
+        self.assertTrue(probe.no_speech_decision(0.02, 0.02, 0.95))
+        self.assertFalse(probe.no_speech_decision(0.8, 0.8, 0.95))
+        self.assertFalse(probe.no_speech_decision(0.01, 0.99, 0.99))
+        self.assertFalse(probe.no_speech_decision(0.01, 0.01, 0.2))
+        self.assertFalse(probe.no_speech_decision(float('nan'), 0.01, 0.95))
+
+    def test_observed_speech_is_preserved_without_retry(self):
+        result = {'availability': 'observed', 'transcription': 'Keep these words.'}
+        with patch.object(probe, 'classify_audio', side_effect=AssertionError('Must not classify')):
+            self.assertIs(probe.resolve_empty_speech(result, None, None, None), result)
+
+    def test_confirmed_no_speech_finishes_without_transcription_retry(self):
+        evidence = {'no_speech': True}
+        result = {'availability': 'unavailable', 'transcription': None}
+        with patch.object(probe, 'classify_audio', return_value=evidence), contextlib.redirect_stdout(io.StringIO()):
+            resolved = probe.resolve_empty_speech(result, None, None, None)
+        self.assertEqual(resolved['availability'], 'absent')
+        self.assertEqual(resolved['transcription'], '')
+        self.assertEqual(resolved['absence_evidence'], 'full_audio_classification')
+
     def test_telemetry_is_disabled_before_speech_engine_import(self):
         import builtins
         calls = []

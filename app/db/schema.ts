@@ -58,6 +58,8 @@ export const runs = sqliteTable("runs", {
   startedAt: text("started_at").notNull(),
   endedAt: text("ended_at"),
   outcome: text("outcome").notNull().default("running"),
+  progress: text("progress"),
+  lastActivityAt: text("last_activity_at"),
 });
 
 export const discoveryLists = sqliteTable("discovery_lists", {

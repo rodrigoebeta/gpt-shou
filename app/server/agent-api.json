@@ -767,7 +767,7 @@
           },
           "runtime_version": {
             "type": "string",
-            "const": "1.7.5"
+            "const": "1.8.0"
           },
           "manifest": {
             "type": "object",
@@ -782,7 +782,7 @@
             "properties": {
               "runtime_version": {
                 "type": "string",
-                "const": "1.7.5"
+                "const": "1.8.0"
               },
               "execution": {
                 "type": "string",
@@ -1767,7 +1767,7 @@
     },
     {
       "name": "update_reference",
-      "description": "Persist backend-only caption, original and Portuguese speech, visual text, semantic description, and classification. Legacy analysis remains supported.",
+      "description": "Persist backend-only caption, original and Portuguese speech, visual text, semantic description, and classification. Legacy analysis remains supported. ANALYSIS_FAILED receives backend retry delays of 1, 2, 4, then 7 days. Confirmed absence of speech is valid complete content.",
       "annotations": {
         "readOnlyHint": false,
         "destructiveHint": false,
@@ -5652,6 +5652,306 @@
           "settings",
           "lease_expires_at",
           "baseline"
+        ],
+        "additionalProperties": false
+      },
+      "errorSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "ok": {
+            "const": false
+          },
+          "contract_version": {
+            "const": "1.0.0"
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "enum": [
+                  "UNAUTHENTICATED",
+                  "FORBIDDEN",
+                  "NOT_FOUND",
+                  "INVALID_ARGUMENT",
+                  "UNSUPPORTED_VERSION",
+                  "IDEMPOTENCY_CONFLICT",
+                  "RUN_BUSY",
+                  "LEASE_EXPIRED",
+                  "REVISION_CONFLICT",
+                  "REFERENCE_REMOVED",
+                  "TAXONOMY_STALE",
+                  "CONSENT_REQUIRED",
+                  "RATE_LIMITED",
+                  "CONTENT_TOO_LARGE",
+                  "UNSUPPORTED_IMAGE",
+                  "IMAGE_HASH_MISMATCH",
+                  "DEPENDENCY_UNAVAILABLE",
+                  "INTERNAL_ERROR"
+                ]
+              },
+              "message": {
+                "type": "string",
+                "maxLength": 256
+              },
+              "retryable": {
+                "type": "boolean"
+              },
+              "retry_at": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "maxLength": 30,
+                    "format": "date-time",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "current_revision": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 2147483647
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "code",
+              "message",
+              "retryable",
+              "retry_at",
+              "current_revision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "ok",
+          "contract_version",
+          "error"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "get_run_status",
+      "description": "Read the actual capture run without acquiring or renewing its lease. Use run_id=null for the latest run, including the active run. Report its persisted progress after RUN_BUSY; never claim that the active run did nothing. Legacy runs have counts=null.",
+      "annotations": {
+        "readOnlyHint": true,
+        "destructiveHint": false,
+        "idempotentHint": true,
+        "openWorldHint": false
+      },
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "contract_version": {
+            "const": "1.0.0"
+          },
+          "run_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 36,
+                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "contract_version",
+          "run_id"
+        ],
+        "additionalProperties": false
+      },
+      "successSchema": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "const": true
+          },
+          "contract_version": {
+            "const": "1.0.0"
+          },
+          "run": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "run_id": {
+                    "type": "string",
+                    "maxLength": 36,
+                    "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"
+                  },
+                  "started_at": {
+                    "type": "string",
+                    "maxLength": 30,
+                    "format": "date-time",
+                    "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$"
+                  },
+                  "ended_at": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 30,
+                        "format": "date-time",
+                        "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "trigger": {
+                    "enum": [
+                      "manual",
+                      "scheduled"
+                    ]
+                  },
+                  "outcome": {
+                    "enum": [
+                      "running",
+                      "expired",
+                      "complete",
+                      "interrupted",
+                      "retry_wait",
+                      "login_required",
+                      "failed"
+                    ]
+                  },
+                  "active": {
+                    "type": "boolean"
+                  },
+                  "lease_expires_at": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 30,
+                        "format": "date-time",
+                        "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "last_activity_at": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 30,
+                        "format": "date-time",
+                        "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d{1,3})?Z$"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "counts": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "attempted": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 2147483647
+                          },
+                          "complete": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 2147483647
+                          },
+                          "partial": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 2147483647
+                          },
+                          "pending": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 2147483647
+                          },
+                          "retry_wait": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 2147483647
+                          },
+                          "login_required": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 2147483647
+                          },
+                          "unavailable": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 2147483647
+                          },
+                          "discovered": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 2147483647
+                          },
+                          "discovery_pages": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 2147483647
+                          }
+                        },
+                        "required": [
+                          "attempted",
+                          "complete",
+                          "partial",
+                          "pending",
+                          "retry_wait",
+                          "login_required",
+                          "unavailable",
+                          "discovered",
+                          "discovery_pages"
+                        ],
+                        "additionalProperties": false
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "run_id",
+                  "started_at",
+                  "ended_at",
+                  "trigger",
+                  "outcome",
+                  "active",
+                  "lease_expires_at",
+                  "last_activity_at",
+                  "counts"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "ok",
+          "contract_version",
+          "run"
         ],
         "additionalProperties": false
       },

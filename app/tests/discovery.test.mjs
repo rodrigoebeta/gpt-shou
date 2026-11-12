@@ -35,6 +35,54 @@ const page=(collection,revision,after,last,end=false)=>({collection_id:collectio
 const read=id=>call('get_discovery',{collection_id:id});
 const finish=()=>call('finish_run',{...base(),outcome:'interrupted',cursor:lease.cursor,cooldowns:[]});
 
+test('run reports count committed work exactly once and remain readable after expiry',async()=>{
+  resetInstallation();await acquire();const id=lease.run_id;
+  const status=()=>call('get_run_status',{run_id:id});
+  assert.equal((await status()).run.active,true);
+  const add={...base(),page:page(null,0,null,'REPORT',true),sources:[source('REPORT')]};
+  const added=await call('record_discovery_page',add);await call('record_discovery_page',add);
+  let ref=added.items[0].reference;
+  const update=outcome=>({...base(),reference_id:ref.reference_id,expected_revision:ref.revision,outcome,analysis:null,content:null,classification:null,failure:outcome==='retry_wait'?{code:'RATE_LIMITED',retry_at:new Date(Date.now()+60000).toISOString()}:{code:'ANALYSIS_FAILED',retry_at:null}});
+  const request=update('partial');failBatch=true;
+  await assert.rejects(()=>call('update_reference',request));
+  assert.equal((await status()).run.counts.attempted,0);
+  ref=(await call('update_reference',request)).reference;await call('update_reference',request);
+  ref=(await call('update_reference',update('partial'))).reference;
+  ref=(await call('update_reference',update('retry_wait'))).reference;
+  const current=(await status()).run;
+  assert.deepEqual(current.counts,{attempted:1,complete:0,partial:0,pending:0,retry_wait:1,login_required:0,unavailable:0,discovered:1,discovery_pages:1});
+  assert.ok(current.last_activity_at>=current.started_at);
+  await assert.rejects(()=>callTool('get_run_status',{contract_version:'1.0.0',run_id:id},new Headers()),{code:'UNAUTHENTICATED'});
+  await assert.rejects(()=>callTool('get_run_status',{contract_version:'1.0.0',run_id:id},new Headers({'oai-authenticated-user-id':'other','oai-authenticated-user-email':'other@example.test'})),{code:'FORBIDDEN'});
+  const before=db.prepare('SELECT * FROM installations').get();await status();
+  assert.deepEqual(db.prepare('SELECT * FROM installations').get(),before);
+  db.exec("UPDATE installations SET lease_expires='2000-01-01T00:00:00Z'");
+  assert.equal((await status()).run.outcome,'expired');await acquire();
+  assert.equal((await call('get_run_status',{run_id:null})).run.run_id,lease.run_id);
+  assert.equal((await status()).run.counts.attempted,1);
+  db.prepare('UPDATE runs SET progress=NULL,last_activity_at=NULL WHERE id=?').run(id);
+  assert.equal((await status()).run.counts,null);
+  await finish();assert.equal((await call('get_run_status',{run_id:lease.run_id})).run.outcome,'interrupted');
+});
+
+test('analysis retries back off for 1, 2, 4, and 7 days while new work remains eligible',async()=>{
+  resetInstallation();await acquire();
+  let ref=(await call('register_sources',{...base(),sources:[source('RETRY')]})).items[0].reference;
+  for(const days of [1,2,4,7,7]){
+    ref=(await call('update_reference',{...base(),reference_id:ref.reference_id,expected_revision:ref.revision,outcome:'partial',analysis:null,content:null,classification:null,failure:{code:'ANALYSIS_FAILED',retry_at:null}})).reference;
+    const row=db.prepare('SELECT * FROM "references" WHERE id=?').get(ref.reference_id);
+    assert.equal(Date.parse(JSON.parse(row.failure).retry_at)-Date.parse(row.last_attempt_at),days*86400000);
+    await finish();await acquire();assert.equal(lease.pending.length,0);
+    const past=new Date(Date.now()-1000).toISOString();
+    db.prepare('UPDATE "references" SET failure=?,last_attempt_at=? WHERE id=?').run(JSON.stringify({code:'ANALYSIS_FAILED',retry_at:past}),new Date(Date.parse(past)-days*86400000).toISOString(),ref.reference_id);
+    await finish();await acquire();assert.equal(lease.pending[0].reference_id,ref.reference_id);
+  }
+  await call('register_sources',{...base(),sources:[source('NEW_SAVE')]});
+  const renewed=await call('start_run',{...base(),mode:'renew',trigger:'manual',package_version:'0.1.0',pending_cursor:null});
+  assert.equal(renewed.pending[0].source_key,'NEW_SAVE');
+  await finish();
+});
+
 test('late creator metadata survives replay and updates search without changing stored work',async()=>{
   resetInstallation();await acquire();
   const original={...source('LATE_CREATOR'),creator:null};
@@ -107,7 +155,7 @@ test('pending traversal covers 123 items and survives a lost finish with partial
   assert.equal(pages,3);assert.equal(processed.size,123);
   assert.equal((await renewPage(null)).pending.length,0);
   assert.equal(db.prepare('SELECT count(*) AS n FROM "references" WHERE last_attempt_at IS NOT NULL').get().n,123);
-  await finish();await acquire();assert.equal(lease.pending.length,50);
+  await finish();await acquire();assert.equal(lease.pending.length,0);
   await finish();
 });
 

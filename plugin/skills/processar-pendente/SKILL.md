@@ -49,14 +49,17 @@ Cada update_reference grava essa posição de forma durável, mesmo sem finish_r
 Uma nova lease usa pending_cursor=null. Nunca reutilize o cursor de uma lease anterior.
 
 Respeite failure.retry_at. Preserve itens indisponíveis sem tentar novamente em todas as execuções.
+O Site adia ANALYSIS_FAILED por 1, 2, 4 e depois até 7 dias. Releia a data gravada.
 Se a análise falhar, grave o conteúdo disponível e continue no próximo item.
 Use no máximo duas tentativas para uma falha transitória do item.
 Suspenda a modalidade afetada após uma falha repetida de infraestrutura.
 Não substitua uma transcrição válida por null durante uma tentativa malsucedida.
 Considere a ausência confirmada de fala um resultado válido.
 Use texto vazio e absent em transcription e transcription_pt somente após comprovar essa ausência.
-Aceite a evidência no_audio_stream do auxiliar quando o hash corresponder ao vídeo adquirido.
-Quando houver áudio, use uma ferramenta cloud para escutar todo o conteúdo antes de confirmar que não há fala.
+Aceite no_audio_stream ou full_audio_classification do auxiliar quando o hash corresponder ao vídeo adquirido.
+O auxiliar verifica todo o áudio e amplifica trechos baixos antes de aceitar ausência de fala.
+Se a classificação continuar incerta, o auxiliar tenta a transcrição novamente com maior sensibilidade à voz.
+Use a inspeção cloud completa para resolver o que continuar indisponível. Não crie uma fila de verificação manual para a pessoa.
 Preserve palavras cantadas inteligíveis. Música não comprova ausência de voz.
 Uma saída vazia do transcritor não comprova ausência de fala. Preserve null e unavailable sem essa confirmação.
 Use complete e failure=null quando os demais campos obrigatórios estiverem disponíveis.

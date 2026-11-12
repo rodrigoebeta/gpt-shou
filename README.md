@@ -74,6 +74,11 @@ Cancelamentos e limites da plataforma continuam possíveis. A tarefa agendada re
 
 ## Atualizar
 
+A versão 1.8.0 verifica novos Salvos antes das tentativas antigas e aplica intervalos maiores às falhas de análise.
+O auxiliar verifica automaticamente música e silêncio. Os relatórios mostram o trabalho da execução real.
+Atualize também o prompt da tarefa existente com o modelo atual da skill agendar. Preserve a frequência e as preferências da pessoa.
+Atualizar somente o Site ou os arquivos não altera uma tarefa já instalada.
+
 O shōu avisa na biblioteca quando uma nova versão fica disponível no GitHub.
 Selecione **Ver atualização** e copie o pedido. Envie-o no Work pelo aplicativo do ChatGPT no seu celular.
 O ChatGPT atualiza o Site e as skills, preservando seus dados e suas configurações.

@@ -29,6 +29,13 @@
       "when": 1791984097836,
       "tag": "0003_glamorous_centennial",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1794449090316,
+      "tag": "0004_capture_progress",
+      "breakpoints": true
     }
   ]
 }

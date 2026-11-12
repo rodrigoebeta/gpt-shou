@@ -1,4 +1,4 @@
-shōu cloud runtime 1.7.5
+shōu cloud runtime 1.8.0
 
 Start the task through Work in the ChatGPT mobile app.
 Use the ChatGPT mobile app for Instagram authentication.
@@ -8,9 +8,14 @@ Do not use a local browser, computer, attachment, paid model API, or another ins
 
 Acquire a run lease with start_run before processing.
 Use started_at from the lease response as the exact run start time.
-Process the existing eligible pending queue before any new-save check, collection scan, or discovery write.
-Finish every pending page before starting discovery. Do not wait for future retries or repeat attempts from this run.
-Keep baseline_only identities excluded. A baseline-only installation can start discovery when its eligible pending queue is empty.
+On RUN_BUSY, call get_run_status with run_id=null, then retain the returned run_id for all later reads.
+Report the active capture status and its committed counts. Do not claim that the capture did nothing.
+Never renew, finish, or release another invocation's lease.
+Check the first Saved page in each selected list before processing old retries. Register its observed sources without replacing the discovery checkpoint.
+Process newly registered references first. Keep baseline_only identities excluded.
+Then refresh the pending queue with start_run mode=renew and pending_cursor=null. Process its eligible pages before resuming deeper discovery.
+If Saved access is unavailable, continue permitted stored-content enrichment and anonymous acquisition.
+Do not wait for future retries or repeat attempts from this run.
 After each discovery page, process its eligible pending work before discovering another page.
 Process every eligible pending page. A page boundary or a few successful items is not a completion condition.
 Keep the current pending page and next_pending_cursor while processing its items.
@@ -60,7 +65,7 @@ The Site stores references and derived content, but no permanent video.
 A recorded source URL does not prove that the media remains accessible.
 Open an item tab only for necessary missing information or a concrete error that browser inspection can clarify.
 An unavailable browser does not block stored-content enrichment or anonymous acquisition.
-After draining pending work, verify Saved access for discovery.
+Verify Saved access for the initial new-save check. Resume deeper discovery after processing eligible pending work.
 Use the authenticated remote browser to discover the owner's Saved Reels and selected collections.
 Use one discovery tab as the normal browser workflow. Pending processing normally needs no browser tab.
 Read the destination hyperlinks from rendered Saved cards. Do not open each item merely to obtain its URL.
@@ -168,8 +173,12 @@ It disables optional ONNX Runtime telemetry before importing the speech engine.
 It accepts files of at most 100 MB and videos of at most 600 seconds.
 An empty recognition result remains null and unavailable; it does not prove that speech is absent.
 For a verified video without an audio stream, the helper returns empty text and absent without loading the speech engine.
-Use absence_evidence=no_audio_stream and the matching media hash as evidence for that result.
-For music, effects, or silence with an audio stream, inspect the complete audio through an available cloud media tool.
+Accept absence_evidence=no_audio_stream or full_audio_classification only with the matching media hash.
+For empty recognition, the helper checks all audio windows with YAMNet, including the final tail and amplified quiet windows.
+It requires low voice scores, including singing, and strong music or silence evidence before returning absent.
+Otherwise it makes one second transcription pass with amplification and a lower voice detection threshold.
+If recognition remains unavailable, inspect the complete audio automatically through an available cloud media tool.
+Do not assign a manual speech-verification queue to the owner.
 If that inspection confirms no speech, save transcription and transcription_pt as empty strings with availability=absent for both fields.
 Do not classify intelligible lyrics as absent speech. Preserve intelligible sung words in the transcript.
 An empty ASR result, silent excerpt, caption, or visual inspection alone cannot establish absence across the complete audio.
@@ -177,6 +186,8 @@ Keep null and unavailable when complete audio inspection is unavailable or incon
 Verified absent speech is valid. Use outcome=complete and failure=null when every other required field is available.
 Do not assign ANALYSIS_FAILED or retry a complete reference merely because verified speech is absent.
 If transcription fails, preserve valid stored content and report its safe stage diagnostics.
+The backend delays ANALYSIS_FAILED retries for 1, 2, 4, then at most 7 days. Read back failure.retry_at.
+A future retry date must not block new-save checks or processing other references.
 Do not print credentials, signed URLs, raw exception messages, or private process output.
 Use the cloud model's media tools to inspect video frames and describe visible content.
 Do not use ffprobe metadata, the caption, or visible subtitles as a substitute for hearing speech.
@@ -230,4 +241,8 @@ Finish every acquired run through finish_run with checkpoint cursors and require
 Remove the whole temporary runtime directory after the run, including on error, interruption, or failed finish_run.
 Include remaining media, model, virtual environment, caches, and private responses in that final cleanup.
 Close any remaining task-created item tab. Preserve the discovery tab and the authenticated browser session.
+Read get_run_status with this run_id after finish_run, or before reporting an interruption.
+Report its started_at, ended_at, outcome, discovered, attempted, and per-outcome counts.
+The counts describe committed work in this run. They are not library totals. Null counts mean unavailable historical metrics.
+If a run remains active, label the report as progress, never as a completed result.
 Return a concise progress report and any required user action.

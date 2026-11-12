@@ -8,6 +8,7 @@ export const VERSION = "0.1.0";
 const success = (value: any) => ({ ok: true, contract_version: "1.0.0", ...value });
 const now = () => new Date().toISOString();
 const expires = () => new Date(Date.now() + 900000).toISOString();
+const emptyProgress = {attempted:0,complete:0,partial:0,pending:0,retry_wait:0,login_required:0,unavailable:0,discovered:0,discovery_pages:0};
 const categoryLabels = ["Confeitaria","Panificação","Churrasco","Barismo","Alfaiataria","Streetwear","Calçados","Acessórios","Maquiagem","Cosméticos","Cabelos","Unhas","Ecoturismo","Mochilão","Hotelaria","Cruzeiros","IA","Câmeras","Aplicativos","Games","Musculação","Corrida","Pilates","Nutrição","Publicidade","Documentários","Videoclipes","Animação"];
 export const database = () => { if (!env.DB) throw new AppError("DEPENDENCY_UNAVAILABLE"); return env.DB; };
 const statement = (sql: string, args: any[] = []) => database().prepare(sql).bind(...args);
@@ -130,11 +131,31 @@ async function start(owner: string, row: any, args: any) {
   const guard = args.mode === "acquire" ? "EXISTS(SELECT 1 FROM installations WHERE id=1 AND owner_id=? AND lease_epoch=? AND (run_id IS NULL OR lease_expires<=?))" : leaseCondition;
   const guardArgs = args.mode === "acquire" ? [owner,row?.lease_epoch??0,now()] : [owner,runId,epoch,now()];
   const writes = [statement("UPDATE installations SET run_id=?,lease_epoch=?,lease_expires=? WHERE id=1",[runId,epoch,expiry])];
-  if (args.mode === "acquire") writes.push(statement("INSERT INTO runs(id,owner_id,epoch,trigger,started_at) VALUES(?,?,?,?,?)",[runId,owner,epoch,args.trigger,startedAt]));
+  if (args.mode === "acquire") writes.push(statement("INSERT INTO runs(id,owner_id,epoch,trigger,started_at,progress,last_activity_at) VALUES(?,?,?,?,?,?,?)",[runId,owner,epoch,args.trigger,startedAt,JSON.stringify(emptyProgress),startedAt]));
   return commit(owner,"start_run",args,result,writes,guard,guardArgs,before);
 }
 
 const renew = (expiry: string) => statement("UPDATE installations SET lease_expires=? WHERE id=1",[expiry]);
+async function runStatus(owner:string, installation:any, runId:string|null) {
+  const run = runId ? await one("SELECT * FROM runs WHERE id=? AND owner_id=?",[runId,owner])
+    : await one("SELECT * FROM runs WHERE owner_id=? ORDER BY epoch DESC LIMIT 1",[owner]);
+  if(runId && !run)throw new AppError("NOT_FOUND");
+  if(!run)return null;
+  const active=installation?.run_id===run.id && installation.lease_expires>now();
+  return {run_id:run.id,started_at:run.started_at,ended_at:run.ended_at,trigger:run.trigger,
+    outcome:run.outcome==="running"&&!active?"expired":run.outcome,active,
+    lease_expires_at:active?installation.lease_expires:null,last_activity_at:run.last_activity_at,
+    counts:run.progress?JSON.parse(run.progress):null};
+}
+
+function analysisFailure(row:any, failure:any, attemptedAt:string) {
+  if(failure?.code!=="ANALYSIS_FAILED")return failure;
+  const previous=row.failure?JSON.parse(row.failure):null;
+  const previousDelay=previous?.code==="ANALYSIS_FAILED" && previous.retry_at && row.last_attempt_at
+    ? Math.max(0,Date.parse(previous.retry_at)-Date.parse(row.last_attempt_at)):0;
+  const retryAt=new Date(Date.parse(attemptedAt)+Math.min(7*86400000,Math.max(86400000,previousDelay*2))).toISOString();
+  return {...failure,retry_at:failure.retry_at && failure.retry_at>retryAt?failure.retry_at:retryAt};
+}
 function taxonomyGuard(owner:string,row:any,args:any) {
   return {sql:`${leaseCondition} AND EXISTS(SELECT 1 FROM installations WHERE id=1 AND taxonomy_revision=?)`,args:[owner,args.run_id,args.lease_epoch,now(),row.taxonomy_revision]};
 }
@@ -243,6 +264,8 @@ async function register(owner: string, row: any, args: any, paginated=false) {
     writes.push(statement('INSERT INTO "references"(id,owner_id,source_key,source_url,creator,collections,discovered_at,saved_at,save_order,search_text,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?)',[id,owner,source.source_key,source.source_url,source.creator,JSON.stringify(source.collection_ids),source.discovered_at,source.saved_at,source.save_order,normalize(source.creator??""),now()]));
   }
   const expiry = expires(); writes.push(renew(expiry));
+  writes.push(statement("UPDATE runs SET progress=json_set(progress,'$.discovered',json_extract(progress,'$.discovered')+?,'$.discovery_pages',json_extract(progress,'$.discovery_pages')+?),last_activity_at=? WHERE id=? AND owner_id=?",
+    [items.filter(item=>item.disposition==="new").length,paginated?1:0,now(),args.run_id,owner]));
   return commit(owner,paginated?"record_discovery_page":"register_sources",args,success({items,baseline:await baseline(owner,row,checkpoint),...(paginated?{discovery:checkpoint}:{}),lease_expires_at:expiry}),writes,guards.join(" AND "),guardArgs);
 }
 
@@ -316,7 +339,12 @@ async function update(owner: string, installation: any, args: any) {
   const next = {...row,revision:row.revision+1,analysis:analysis?JSON.stringify(analysis):null,outcome:args.outcome,result_sha:resultSha};
   const guard = referenceGuard(owner,row,{...args,taxonomyRevision:installation.taxonomy_revision});
   const attemptedAt=now();
-  const writes = [statement('UPDATE "references" SET analysis=?,classification=?,search_text=?,result_sha=?,outcome=?,failure=?,revision=revision+1,updated_at=?,last_attempt_at=?,last_attempt_run_id=? WHERE id=?',[next.analysis,JSON.stringify(classification),indexed,resultSha,args.outcome,args.failure?JSON.stringify(args.failure):null,attemptedAt,attemptedAt,args.run_id,row.id]),renew(expiry)];
+  const failure=analysisFailure(row,args.failure,attemptedAt);
+  const writes = [statement('UPDATE "references" SET analysis=?,classification=?,search_text=?,result_sha=?,outcome=?,failure=?,revision=revision+1,updated_at=?,last_attempt_at=?,last_attempt_run_id=? WHERE id=?',[next.analysis,JSON.stringify(classification),indexed,resultSha,args.outcome,failure?JSON.stringify(failure):null,attemptedAt,attemptedAt,args.run_id,row.id]),renew(expiry)];
+  const repeated=row.last_attempt_run_id===args.run_id;
+  const previousPath=`$.${row.outcome}`,nextPath=`$.${args.outcome}`;
+  writes.push(statement("UPDATE runs SET progress=json_set(json_set(progress,?,json_extract(progress,?)-?),?,json_extract(progress,?)+?,'$.attempted',json_extract(progress,'$.attempted')+?),last_activity_at=? WHERE id=? AND owner_id=?",
+    [previousPath,previousPath,repeated?1:0,nextPath,nextPath,repeated&&row.outcome===args.outcome?0:1,repeated?0:1,attemptedAt,args.run_id,owner]));
   if (classification.reclassification_consent_id) {
     const consent = JSON.parse(installation.reclassification);
     consent.reference_ids=consent.reference_ids.filter((id:string)=>id!==row.id);
@@ -354,6 +382,7 @@ export async function callTool(name: string, args: any, headers: Headers) {
   if (args.request_id) {const saved=await replay(identity.id,name,args,hash);if(saved)return saved;}
   if (name === "start_run") return start(identity.id,identity.row,args);
   if (name === "get_runtime") return runtimeFile(args.file);
+  if (name === "get_run_status") return success({run:await runStatus(identity.id,identity.row,args.run_id)});
   if (name === "get_discovery") return success({discovery:await discovery(identity.id,identity.row,args.collection_id),baseline:await baseline(identity.id,identity.row)});
   if (name === "get_reference") {
     const row = await reference(args.reference_id,identity.id);
